@@ -1,0 +1,24 @@
+services:
+  api:
+    image: storyspin-api
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - 5000
+    volumes:
+      - './models:/usr/share/app/models:ro'
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+  bot:
+    image: storyspin-bot
+    build:
+      context: .
+      dockerfile: Dockerfile.bot
+    depends_on:
+      - api
