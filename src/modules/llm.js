@@ -13,16 +13,18 @@ const model = await llama.loadModel({
     'capybarahermes-2.5-mistral-7b.Q8_0.gguf'
   )
 });
-const context = await model.createContext();
+const context = await model.createContext({
+  contextSize: {
+    min: 512,
+    max: 16384
+  }
+});
 const session = new LlamaChatSession({
   contextSequence: context.getSequence()
 });
 
-const result = await session.promptWithMeta(
-  "Help me understand Ohm's law, please.",
-  {
+export const extendStory = async (prompt) => {
+  return await session.promptWithMeta(prompt, {
     maxTokens: 512
-  }
-);
-
-console.log(result.responseText);
+  });
+};

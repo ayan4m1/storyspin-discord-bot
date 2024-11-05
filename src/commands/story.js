@@ -1,5 +1,7 @@
 import { SlashCommandBuilder } from 'discord.js';
+
 import { getLogger } from '../modules/logging.js';
+import { extendStory } from '../modules/llm.js';
 
 const log = getLogger('story');
 
@@ -10,6 +12,17 @@ export const data = new SlashCommandBuilder()
     subCmd
       .setName('reset')
       .setDescription('Resets the context of the active story')
+  )
+  .addSubcommand((subCmd) =>
+    subCmd
+      .setName('set-context')
+      .setDescription('Sets the story context')
+      .addStringOption((opt) =>
+        opt
+          .setName('context')
+          .setDescription('Context to add')
+          .setRequired(true)
+      )
   );
 
 export const handler = async (interaction) => {
@@ -21,7 +34,11 @@ export const handler = async (interaction) => {
 
     console.dir(subCmd);
 
-    await interaction.editReply('OK!');
+    if (subCmd === 'set-context') {
+      const result = await extendStory();
+
+      await interaction.editReply(result.responseText);
+    }
   } catch (error) {
     log.error(error.message);
     log.error(error.stack);
