@@ -1,7 +1,7 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { EmbedBuilder, SlashCommandBuilder } from 'discord.js';
 
 import { getLogger } from '../modules/logging.js';
-import { getNextContributor } from '../modules/queue.js';
+import { getContributorColor, getNextContributor } from '../modules/queue.js';
 import { extendStory, resetContext, setContext } from '../modules/llm.js';
 
 const log = getLogger('story');
@@ -71,21 +71,53 @@ export const handler = async (interaction) => {
     const subCmd = options.getSubcommand(true);
 
     switch (subCmd) {
-      case 'set-context':
-        await setContext(options.getString('context', true));
-        await interaction.editReply('Overwrote context!');
+      case 'set-context': {
+        const context = options.getString('context', true);
+
+        await setContext(context);
+        await interaction.editReply('Initialized world!');
+        await interaction.channel.send(
+          new EmbedBuilder({
+            author: {
+              name: interaction.member.nickname ?? interaction.user.username
+            },
+            color: getContributorColor(interaction.user.id),
+            description: context
+          })
+        );
         break;
+      }
       case 'extend': {
         if (user.id !== getNextContributor()) {
           return await interaction.editReply('Its not your turn!');
         }
 
+        const storyText = options.getString('text', true);
         const result = await extendStory(
-          options.getString('text', true),
+          storyText,
           options.getNumber('tokens', false)
         );
 
-        await interaction.editReply(result.responseText);
+        await interaction.editReply(
+          new EmbedBuilder({
+            author: {
+              name: interaction.member.nickname ?? interaction.user.username
+            },
+            color: getContributorColor(interaction.user.id),
+            description: storyText
+          })
+        );
+        await interaction.channel.send(
+          new EmbedBuilder({
+            author: {
+              name: 'StorySpin',
+              icon_url:
+                'https://cdn.discordapp.com/app-icons/1303161150363537508/3cccf7b784a89c14f6e475387cf5e1d1.png?size=512'
+            },
+            color: '#2e9fe7',
+            description: result.responseText
+          })
+        );
         break;
       }
       case 'reset':
@@ -93,10 +125,8 @@ export const handler = async (interaction) => {
         await interaction.editReply('Reset story!');
         break;
       case 'save':
-        // todo: this
-        await interaction.editReply('To be implemented!');
-        break;
       case 'load':
+      default:
         // todo: this
         await interaction.editReply('To be implemented!');
         break;

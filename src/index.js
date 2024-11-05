@@ -5,7 +5,7 @@ import {
   syncCommands
 } from './modules/discord.js';
 import { getLogger } from './modules/logging.js';
-import { dequeue, getNextContributor } from './modules/queue.js';
+import { advanceContributors, getNextContributor } from './modules/queue.js';
 
 const log = getLogger('index');
 
@@ -19,7 +19,7 @@ const log = getLogger('index');
   log.info(`Bot is connected to ${guilds.length} servers!`);
 
   setInterval(async () => {
-    dequeue();
+    advanceContributors();
 
     if (!getNextContributor()) {
       return;
