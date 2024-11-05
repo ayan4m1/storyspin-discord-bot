@@ -11,7 +11,8 @@ const context = await model.createContext({
   contextSize: {
     min: 512,
     max: 16384
-  }
+  },
+  flashAttention: true
 });
 const session = new LlamaChatSession({
   contextSequence: context.getSequence()
