@@ -14,10 +14,10 @@ RUN wget -nv https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404
     apt-get update && \
     apt-get -y install cuda-toolkit-12-6
 
+RUN npx -y node-llama-cpp source download --gpu cuda
+
 COPY . .
 
 RUN npm ci
-
-RUN npx node-llama-cpp source download --gpu cuda
 
 CMD ["node", "src/index.js"]
