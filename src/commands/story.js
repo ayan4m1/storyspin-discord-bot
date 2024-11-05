@@ -1,8 +1,8 @@
 import { SlashCommandBuilder } from 'discord.js';
 
 import { getLogger } from '../modules/logging.js';
+import { getNextContributor } from '../modules/queue.js';
 import { extendStory, resetContext, setContext } from '../modules/llm.js';
-import { nextContributor } from '../modules/queue.js';
 
 const log = getLogger('story');
 
@@ -69,7 +69,7 @@ export const handler = async (interaction) => {
         await interaction.editReply('Overwrote context!');
         break;
       case 'extend': {
-        if (user.id !== nextContributor) {
+        if (user.id !== getNextContributor()) {
           return await interaction.editReply('Its not your turn!');
         }
 
