@@ -90,6 +90,8 @@ export const handler = async (interaction) => {
           return await interaction.editReply('Its not your turn!');
         }
 
+        await interaction.editReply('Generating more story now...');
+
         const storyText = options.getString('text', true);
         const result = await extendStory(
           storyText,
