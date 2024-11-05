@@ -1,4 +1,4 @@
-import { generateRandomHexColor } from '../utils';
+import { generateRandomHexColor } from '../utils/index.js';
 
 const contributorColors = new Map();
 const contributors = [];
