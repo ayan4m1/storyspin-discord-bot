@@ -139,12 +139,24 @@ export const connectBot = async () =>
 export const disconnectBot = client.destroy;
 
 const findUserInGuilds = async (discordUserId) => {
-  for (const guildId of config.guildIds) {
+  for (const guildId of client.guilds.cache.values()) {
     const guild = client.guilds.resolve(guildId);
     const user = await guild.members.fetch(discordUserId);
 
     if (user) {
       return user;
+    }
+  }
+
+  return null;
+};
+
+export const getStoryChannel = async () => {
+  for (const guild of client.guilds.cache.values()) {
+    const channel = guild.channels.resolve(config.storyChannelId);
+
+    if (channel) {
+      return channel;
     }
   }
 

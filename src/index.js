@@ -1,8 +1,9 @@
+import { discord as config } from './modules/config.js';
 import {
   connectBot,
+  syncCommands,
   getDirectMessageChannel,
-  registerCommandsAndHandlers,
-  syncCommands
+  registerCommandsAndHandlers
 } from './modules/discord.js';
 import { getLogger } from './modules/logging.js';
 import { advanceContributors, getNextContributor } from './modules/queue.js';
@@ -25,10 +26,10 @@ const log = getLogger('index');
       return;
     }
 
-    const channel = await getDirectMessageChannel(getNextContributor());
+    const dmChannel = await getDirectMessageChannel(getNextContributor());
 
-    await channel.send(
-      "It's your turn! Use /story extend in the #llm channel!"
+    await dmChannel.send(
+      `It's your turn! Use /story extend in the <#${config.storyChannelId}> channel!`
     );
   }, 120000);
 })();
