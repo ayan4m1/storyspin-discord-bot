@@ -111,7 +111,7 @@ export const handler = async (interaction) => {
                 icon_url:
                   'https://cdn.discordapp.com/app-icons/1303161150363537508/3cccf7b784a89c14f6e475387cf5e1d1.png?size=512'
               },
-              color: '#2e9fe7',
+              color: 0x2e9fe7,
               description: result.responseText
             })
           ]
