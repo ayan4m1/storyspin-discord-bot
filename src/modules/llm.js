@@ -9,7 +9,7 @@ const model = await llama.loadModel({
 });
 const context = await model.createContext({
   contextSize: {
-    min: 512,
+    min: 256,
     max: 16384
   },
   flashAttention: true
@@ -18,7 +18,7 @@ const session = new LlamaChatSession({
   contextSequence: context.getSequence()
 });
 
-export const extendStory = async (prompt, tokens = 512) => {
+export const extendStory = async (prompt, tokens = 128) => {
   return await session.promptWithMeta(prompt, {
     maxTokens: tokens
   });
