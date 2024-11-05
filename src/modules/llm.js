@@ -10,6 +10,7 @@ const model = await llama.loadModel({
     __dirname,
     '..',
     '..',
+    '..',
     'models',
     'CapybaraHermes-2.5-Mistral-7B-GGUF',
     'capybarahermes-2.5-mistral-7b.Q8_0.gguf'
