@@ -15,6 +15,7 @@
     "discord-api-types": "^0.37.103",
     "discord.js": "^14.16.3",
     "dotenv": "^16.4.5",
+    "node-llama-cpp": "^3.2.0",
     "winston": "^3.16.0"
   },
   "devDependencies": {
