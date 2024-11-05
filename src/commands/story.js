@@ -1,5 +1,6 @@
 import { EmbedBuilder, SlashCommandBuilder } from 'discord.js';
 
+import { discord as config } from '../modules/config.js';
 import { getLogger } from '../modules/logging.js';
 import { getContributorColor, getNextContributor } from '../modules/queue.js';
 import { extendStory, resetContext, setContext } from '../modules/llm.js';
@@ -60,6 +61,10 @@ export const data = new SlashCommandBuilder()
 
 export const handler = async (interaction) => {
   try {
+    if (interaction.channel.id !== config.storyChannelId) {
+      return await interaction.reply('Wrong channel!');
+    }
+
     await interaction.deferReply({ ephemeral: true });
 
     const { options, user } = interaction;
