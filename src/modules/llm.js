@@ -1,19 +1,9 @@
-import { dirname, join } from 'path';
-import { fileURLToPath } from 'url';
+import { join } from 'path';
 import { getLlama, LlamaChatSession } from 'node-llama-cpp';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const llama = await getLlama();
 const model = await llama.loadModel({
-  modelPath: join(
-    __dirname,
-    '..',
-    '..',
-    '..',
-    'models',
-    'capybarahermes-2.5-mistral-7b.Q8_0.gguf'
-  )
+  modelPath: join('/', 'models', 'capybarahermes-2.5-mistral-7b.Q8_0.gguf')
 });
 const context = await model.createContext({
   contextSize: {

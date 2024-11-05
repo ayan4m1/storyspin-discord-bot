@@ -3,7 +3,7 @@ services:
     image: storyspin-bot
     build: .
     volumes:
-      - './models:/usr/share/models:ro'
+      - './models:/models:ro'
     deploy:
       resources:
         reservations:
