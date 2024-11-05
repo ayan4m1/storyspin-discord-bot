@@ -60,7 +60,7 @@ export const data = new SlashCommandBuilder()
 
 export const handler = async (interaction) => {
   try {
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral: true });
 
     const { options, user } = interaction;
     const subCmd = options.getSubcommand(true);
@@ -72,15 +72,17 @@ export const handler = async (interaction) => {
         await resetContext();
         await setContext(context);
         await interaction.editReply('Starting story...');
-        await interaction.channel.send(
-          new EmbedBuilder({
-            author: {
-              name: interaction.member.nickname ?? interaction.user.username
-            },
-            color: getContributorColor(interaction.user.id),
-            description: context
-          })
-        );
+        await interaction.channel.send({
+          embeds: [
+            new EmbedBuilder({
+              author: {
+                name: interaction.member.nickname ?? interaction.user.username
+              },
+              color: getContributorColor(interaction.user.id),
+              description: context
+            })
+          ]
+        });
         break;
       }
       case 'extend': {
@@ -94,31 +96,38 @@ export const handler = async (interaction) => {
           options.getNumber('tokens', false)
         );
 
-        await interaction.editReply(
-          new EmbedBuilder({
-            author: {
-              name: interaction.member.nickname ?? interaction.user.username
-            },
-            color: getContributorColor(interaction.user.id),
-            description: storyText
-          })
-        );
-        await interaction.channel.send(
-          new EmbedBuilder({
-            author: {
-              name: 'StorySpin',
-              icon_url:
-                'https://cdn.discordapp.com/app-icons/1303161150363537508/3cccf7b784a89c14f6e475387cf5e1d1.png?size=512'
-            },
-            color: '#2e9fe7',
-            description: result.responseText
-          })
-        );
+        await interaction.channel.send({
+          embeds: [
+            new EmbedBuilder({
+              author: {
+                name: interaction.member.nickname ?? interaction.user.username
+              },
+              color: getContributorColor(interaction.user.id),
+              description: storyText
+            }),
+            new EmbedBuilder({
+              author: {
+                name: 'StorySpin',
+                icon_url:
+                  'https://cdn.discordapp.com/app-icons/1303161150363537508/3cccf7b784a89c14f6e475387cf5e1d1.png?size=512'
+              },
+              color: '#2e9fe7',
+              description: result.responseText
+            })
+          ]
+        });
         break;
       }
       case 'end':
         await resetContext();
         await interaction.editReply('Story ended!');
+        await interaction.channel.send({
+          embeds: [
+            new EmbedBuilder({
+              description: 'Story ended!'
+            })
+          ]
+        });
         break;
       case 'save':
       case 'load':
