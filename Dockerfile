@@ -1,10 +1,12 @@
-FROM node:lts-alpine
+FROM node:lts
 
 WORKDIR /usr/src/app
 
-COPY . .
+RUN apt-get update && apt-get dist-upgrade
 
-RUN apk add build-base git
+RUN apt-get install build-base git
+
+COPY . .
 
 RUN npm ci
 
