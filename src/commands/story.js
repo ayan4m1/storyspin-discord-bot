@@ -16,7 +16,7 @@ export const data = new SlashCommandBuilder()
   .addSubcommand((subCmd) =>
     subCmd
       .setName('set-context')
-      .setDescription('')
+      .setDescription('Sets the story context (world building)')
       .addStringOption((opt) =>
         opt
           .setName('context')
