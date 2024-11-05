@@ -10,19 +10,14 @@ export const data = new SlashCommandBuilder()
   .setName('story')
   .setDescription('Manage the active story')
   .addSubcommand((subCmd) =>
-    subCmd
-      .setName('reset')
-      .setDescription('Resets the context of the active story')
+    subCmd.setName('end').setDescription('Stops the current story')
   )
   .addSubcommand((subCmd) =>
     subCmd
-      .setName('set-context')
-      .setDescription('Sets the story context (world building)')
+      .setName('begin')
+      .setDescription('Starts a story with a given prompt')
       .addStringOption((opt) =>
-        opt
-          .setName('context')
-          .setDescription('Context to set')
-          .setRequired(true)
+        opt.setName('prompt').setDescription('World prompt').setRequired(true)
       )
   )
   .addSubcommand((subCmd) =>
@@ -71,11 +66,12 @@ export const handler = async (interaction) => {
     const subCmd = options.getSubcommand(true);
 
     switch (subCmd) {
-      case 'set-context': {
-        const context = options.getString('context', true);
+      case 'begin': {
+        const context = options.getString('prompt', true);
 
+        await resetContext();
         await setContext(context);
-        await interaction.editReply('Initialized world!');
+        await interaction.editReply('Starting story...');
         await interaction.channel.send(
           new EmbedBuilder({
             author: {
@@ -120,9 +116,9 @@ export const handler = async (interaction) => {
         );
         break;
       }
-      case 'reset':
+      case 'end':
         await resetContext();
-        await interaction.editReply('Reset story!');
+        await interaction.editReply('Story ended!');
         break;
       case 'save':
       case 'load':
