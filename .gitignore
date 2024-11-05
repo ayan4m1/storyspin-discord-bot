@@ -1,0 +1,5 @@
+node_modules/
+.env
+images/
+__pycache__/
+*.pth

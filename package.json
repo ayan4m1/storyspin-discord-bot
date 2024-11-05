@@ -1,0 +1,33 @@
+{
+  "name": "storyspin-discord-bot",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Story Spinner Discord Bot",
+  "author": "ayan4m1 <andrew@bulletlogic.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "node src/index.js",
+    "lint": "eslint src/**/*.js"
+  },
+  "dependencies": {
+    "bottleneck": "^2.19.5",
+    "discord-api-types": "^0.37.103",
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.5",
+    "winston": "^3.16.0"
+  },
+  "devDependencies": {
+    "@babel/eslint-parser": "^7.25.9",
+    "@eslint/js": "^9.14.0",
+    "eslint": "^9.14.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-import-resolver-node": "^0.3.9",
+    "eslint-plugin-import-x": "^4.4.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "globals": "^15.12.0",
+    "husky": "^9.1.6",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.3.3"
+  }
+}
