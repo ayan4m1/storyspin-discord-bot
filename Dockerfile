@@ -18,6 +18,6 @@ RUN npx -y node-llama-cpp source download --gpu cuda
 
 COPY . .
 
-RUN npm ci
+RUN npm install
 
 CMD ["node", "src/index.js"]
