@@ -5,7 +5,7 @@ import {
   syncCommands
 } from './modules/discord.js';
 import { getLogger } from './modules/logging.js';
-import { dequeue } from './modules/queue.js';
+import { dequeue, nextContributor } from './modules/queue.js';
 
 const log = getLogger('index');
 
@@ -19,13 +19,13 @@ const log = getLogger('index');
   log.info(`Bot is connected to ${guilds.length} servers!`);
 
   setInterval(async () => {
-    const nextUserId = dequeue();
+    dequeue();
 
-    if (!nextUserId) {
+    if (!nextContributor) {
       return;
     }
 
-    const channel = getDirectMessageChannel(nextUserId);
+    const channel = getDirectMessageChannel(nextContributor);
 
     await channel.send(
       "It's your turn! Use /story extend in the #llm channel!"

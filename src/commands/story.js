@@ -1,7 +1,8 @@
 import { SlashCommandBuilder } from 'discord.js';
 
 import { getLogger } from '../modules/logging.js';
-import { resetContext, setContext } from '../modules/llm.js';
+import { extendStory, resetContext, setContext } from '../modules/llm.js';
+import { nextContributor } from '../modules/queue.js';
 
 const log = getLogger('story');
 
@@ -21,6 +22,17 @@ export const data = new SlashCommandBuilder()
         opt
           .setName('context')
           .setDescription('Context to set')
+          .setRequired(true)
+      )
+  )
+  .addSubcommand((subCmd) =>
+    subCmd
+      .setName('extend')
+      .setDescription('Adds to the story')
+      .addStringOption((opt) =>
+        opt
+          .setName('text')
+          .setDescription('Text to add to the story')
           .setRequired(true)
       )
   )
@@ -48,7 +60,7 @@ export const handler = async (interaction) => {
   try {
     await interaction.deferReply();
 
-    const { options } = interaction;
+    const { options, user } = interaction;
     const subCmd = options.getSubcommand(true);
 
     switch (subCmd) {
@@ -56,6 +68,16 @@ export const handler = async (interaction) => {
         await setContext(options.getString('context', true));
         await interaction.editReply('Overwrote context!');
         break;
+      case 'extend': {
+        if (user.id !== nextContributor) {
+          return await interaction.editReply('Its not your turn!');
+        }
+
+        const result = await extendStory(options.getString('text', true));
+
+        await interaction.editReply(result.responseText);
+        break;
+      }
       case 'reset':
         await resetContext();
         await interaction.editReply('Reset story!');

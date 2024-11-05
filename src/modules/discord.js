@@ -12,7 +12,7 @@ import { discord as config } from './config.js';
 import { getLogger } from './logging.js';
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds]
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers]
 });
 const log = getLogger('discord');
 
