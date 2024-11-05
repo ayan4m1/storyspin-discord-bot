@@ -18,7 +18,7 @@ export const handler = async (interaction) => {
     if (position === -1) {
       await interaction.editReply(`You are already in the queue!`);
     } else {
-      await interaction.editReply(`You are #${position} in the queue!`);
+      await interaction.editReply(`You are now #${position} in the queue!`);
     }
   } catch (error) {
     log.error(error.message);
