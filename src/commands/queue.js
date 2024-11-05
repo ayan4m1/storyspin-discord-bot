@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from 'discord.js';
 
 import { getLogger } from '../modules/logging.js';
-import { enqueue } from '../modules/queue.js';
+import { queueUser } from '../modules/queue.js';
 
 const log = getLogger('queue');
 
@@ -11,14 +11,12 @@ export const data = new SlashCommandBuilder()
 
 export const handler = async (interaction) => {
   try {
-    await interaction.deferReply();
-
-    const position = enqueue(interaction.user.id);
+    const position = queueUser(interaction.user.id);
 
     if (position === -1) {
-      await interaction.editReply(`You are already in the queue!`);
+      await interaction.reply(`You are already in the queue!`);
     } else {
-      await interaction.editReply(`You are now #${position} in the queue!`);
+      await interaction.reply(`You are now #${position} in the queue!`);
     }
   } catch (error) {
     log.error(error.message);
