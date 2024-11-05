@@ -4,6 +4,8 @@ services:
     build: .
     volumes:
       - './models:/models:ro'
+    env_file:
+      - .env
     deploy:
       resources:
         reservations:
