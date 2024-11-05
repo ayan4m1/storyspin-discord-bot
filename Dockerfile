@@ -20,6 +20,4 @@ RUN npm ci
 
 RUN npx node-llama-cpp source download --gpu cuda
 
-RUN npx node-llama-cpp source build
-
 CMD ["node", "src/index.js"]
