@@ -20,3 +20,16 @@ export const extendStory = async (prompt) => {
     maxTokens: 512
   });
 };
+
+export const setContext = async (prompt) => {
+  session.setChatHistory([
+    {
+      type: 'system',
+      text: prompt
+    }
+  ]);
+};
+
+export const resetContext = async () => {
+  session.resetChatHistory();
+};

@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from 'discord.js';
 
 import { getLogger } from '../modules/logging.js';
+import { enqueue } from '../modules/queue.js';
 
 const log = getLogger('queue');
 
@@ -12,9 +13,9 @@ export const handler = async (interaction) => {
   try {
     await interaction.deferReply();
 
-    // add user to queue
+    const position = enqueue(interaction.user.id);
 
-    await interaction.editReply(`You are #1 in the queue!`);
+    await interaction.editReply(`You are #${position} in the queue!`);
   } catch (error) {
     log.error(error.message);
     log.error(error.stack);
