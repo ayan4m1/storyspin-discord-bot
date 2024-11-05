@@ -1,9 +1,11 @@
 import { join } from 'path';
 import { getLlama, LlamaChatSession } from 'node-llama-cpp';
 
+import { llm } from './config.js';
+
 const llama = await getLlama();
 const model = await llama.loadModel({
-  modelPath: join('/', 'models', 'capybarahermes-2.5-mistral-7b.Q8_0.gguf')
+  modelPath: join('/', 'models', llm.modelFile)
 });
 const context = await model.createContext({
   contextSize: {
