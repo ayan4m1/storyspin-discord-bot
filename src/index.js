@@ -25,7 +25,7 @@ const log = getLogger('index');
       return;
     }
 
-    const channel = getDirectMessageChannel(getNextContributor());
+    const channel = await getDirectMessageChannel(getNextContributor());
 
     await channel.send(
       "It's your turn! Use /story extend in the #llm channel!"
