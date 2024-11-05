@@ -35,7 +35,7 @@ export const handler = async (interaction) => {
     console.dir(subCmd);
 
     if (subCmd === 'set-context') {
-      const result = await extendStory();
+      const result = await extendStory(options.getString('context', true));
 
       await interaction.editReply(result.responseText);
     }
