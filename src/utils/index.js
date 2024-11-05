@@ -1,2 +1,2 @@
 export const generateRandomHexColor = () =>
-  '#' + (((1 << 24) * Math.random()) | 0).toString(16).padStart(6, '0');
+  Math.floor(Math.random() * Math.pow(255, 3));
