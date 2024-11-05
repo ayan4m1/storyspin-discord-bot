@@ -15,9 +15,9 @@ const session = new LlamaChatSession({
   contextSequence: context.getSequence()
 });
 
-export const extendStory = async (prompt) => {
+export const extendStory = async (prompt, tokens = 512) => {
   return await session.promptWithMeta(prompt, {
-    maxTokens: 512
+    maxTokens: tokens
   });
 };
 

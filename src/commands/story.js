@@ -35,6 +35,13 @@ export const data = new SlashCommandBuilder()
           .setDescription('Text to add to the story')
           .setRequired(true)
       )
+      .addIntegerOption((opt) =>
+        opt
+          .setName('tokens')
+          .setDescription('Amount of text to generate')
+          .setMinValue(32)
+          .setMaxValue(1024)
+      )
   )
   .addSubcommand((subCmd) =>
     subCmd
@@ -73,7 +80,10 @@ export const handler = async (interaction) => {
           return await interaction.editReply('Its not your turn!');
         }
 
-        const result = await extendStory(options.getString('text', true));
+        const result = await extendStory(
+          options.getString('text', true),
+          options.getNumber('tokens', false)
+        );
 
         await interaction.editReply(result.responseText);
         break;
