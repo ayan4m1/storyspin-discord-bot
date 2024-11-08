@@ -35,4 +35,5 @@ export const getContributorColor = (userId) => {
   return contributorColors.get(userId);
 };
 
-export const queueTask = rateLimiter.schedule;
+export const queueTask = <R>(fn: PromiseLike<R>): Promise<R> =>
+  rateLimiter.schedule<R>(() => fn);

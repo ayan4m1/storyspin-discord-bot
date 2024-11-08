@@ -28,7 +28,7 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
     const { options, user } = interaction;
     const member = interaction.member as GuildMember;
     const prompt = options.getString('prompt', true);
-    const result = await queueTask(() => askQuestion(prompt));
+    const result = await queueTask(askQuestion(prompt));
 
     await interaction.editReply('Answered!');
     await interaction.channel.send({
