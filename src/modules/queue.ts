@@ -1,5 +1,10 @@
+import Bottleneck from 'bottleneck';
 import { generateRandomHexColor } from '../utils/index.js';
 
+const rateLimiter = new Bottleneck({
+  maxConcurrent: 1,
+  minTime: 1000
+});
 const contributorColors = new Map<string, number>();
 const contributors: string[] = [];
 let nextContributor: string = null;
@@ -29,3 +34,5 @@ export const getContributorColor = (userId) => {
 
   return contributorColors.get(userId);
 };
+
+export const queueTask = rateLimiter.schedule;

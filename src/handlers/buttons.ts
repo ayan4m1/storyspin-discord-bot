@@ -1,9 +1,10 @@
+import { ButtonInteraction } from 'discord.js';
 import { getLogger } from '../modules/logging.js';
 
 const log = getLogger('buttons');
 
 export const eventHandlers = {
-  interactionCreate: async (interaction) => {
+  interactionCreate: async (interaction: ButtonInteraction) => {
     if (!interaction.isButton()) {
       return;
     }

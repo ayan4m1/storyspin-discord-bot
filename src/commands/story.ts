@@ -1,8 +1,12 @@
-import { EmbedBuilder, SlashCommandBuilder } from 'discord.js';
+import {
+  ChatInputCommandInteraction,
+  GuildMember,
+  SlashCommandBuilder
+} from 'discord.js';
 
 import { discord as config } from '../modules/config.js';
 import { getLogger } from '../modules/logging.js';
-import { getContributorColor, getNextContributor } from '../modules/queue.js';
+import { getNextContributor } from '../modules/queue.js';
 import {
   extendStory,
   loadContext,
@@ -10,6 +14,7 @@ import {
   saveContext,
   setContext
 } from '../modules/llm.js';
+import { createSystemEmbed, createUserEmbed } from '../modules/discord.js';
 
 const log = getLogger('story');
 
@@ -65,7 +70,7 @@ export const data = new SlashCommandBuilder()
     subCmd.setName('list').setDescription('Lists the saved stories')
   );
 
-export const handler = async (interaction) => {
+export const handler = async (interaction: ChatInputCommandInteraction) => {
   try {
     if (interaction.channel.id !== config.storyChannelId) {
       return await interaction.reply('Wrong channel!');
@@ -74,6 +79,7 @@ export const handler = async (interaction) => {
     await interaction.deferReply({ ephemeral: true });
 
     const { options, user } = interaction;
+    const member = interaction.member as GuildMember;
     const subCmd = options.getSubcommand(true);
 
     switch (subCmd) {
@@ -88,22 +94,8 @@ export const handler = async (interaction) => {
 
         await interaction.channel.send({
           embeds: [
-            new EmbedBuilder({
-              author: {
-                name: interaction.member.nickname ?? interaction.user.username
-              },
-              color: getContributorColor(interaction.user.id),
-              description: prompt
-            }),
-            new EmbedBuilder({
-              author: {
-                name: 'StorySpin',
-                icon_url:
-                  'https://cdn.discordapp.com/app-icons/1303161150363537508/3cccf7b784a89c14f6e475387cf5e1d1.png?size=512'
-              },
-              color: 0x2e9fe7,
-              description: result.responseText
-            })
+            createUserEmbed(member, user, prompt),
+            createSystemEmbed(result.responseText)
           ]
         });
         break;
@@ -113,7 +105,7 @@ export const handler = async (interaction) => {
           return await interaction.editReply('Its not your turn!');
         }
 
-        await interaction.editReply('Generating more story now...');
+        await interaction.editReply('Extending story...');
 
         const storyText = options.getString('text', true);
         const result = await extendStory(
@@ -123,22 +115,8 @@ export const handler = async (interaction) => {
 
         await interaction.channel.send({
           embeds: [
-            new EmbedBuilder({
-              author: {
-                name: interaction.member.nickname ?? interaction.user.username
-              },
-              color: getContributorColor(interaction.user.id),
-              description: storyText
-            }),
-            new EmbedBuilder({
-              author: {
-                name: 'StorySpin',
-                icon_url:
-                  'https://cdn.discordapp.com/app-icons/1303161150363537508/3cccf7b784a89c14f6e475387cf5e1d1.png?size=512'
-              },
-              color: 0x2e9fe7,
-              description: result.responseText
-            })
+            createUserEmbed(member, user, storyText),
+            createSystemEmbed(result.responseText)
           ]
         });
         break;
@@ -147,11 +125,7 @@ export const handler = async (interaction) => {
         await resetContext();
         await interaction.editReply('Story ended!');
         await interaction.channel.send({
-          embeds: [
-            new EmbedBuilder({
-              description: 'Story ended!'
-            })
-          ]
+          embeds: [createSystemEmbed('Story ended!')]
         });
         break;
       case 'save': {
@@ -159,13 +133,18 @@ export const handler = async (interaction) => {
 
         await saveContext(storyName);
         await interaction.editReply('Saved!');
+        await interaction.channel.send('The story has been saved!');
         break;
       }
       case 'load': {
         const storyName = options.getString('name', true);
 
+        // todo: get chat history so we can reply it
         await loadContext(storyName);
         await interaction.editReply('Loaded!');
+        await interaction.channel.send(
+          `The story "${storyName}" has been loaded!`
+        );
         break;
       }
       default:

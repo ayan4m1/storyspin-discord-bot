@@ -6,12 +6,16 @@ import {
   GatewayIntentBits,
   InteractionType,
   SlashCommandBuilder,
-  Interaction
+  Interaction,
+  GuildMember,
+  User,
+  EmbedBuilder
 } from 'discord.js';
 import { readdirSync } from 'fs';
 
 import { discord as config } from './config.js';
 import { getLogger } from './logging.js';
+import { getContributorColor } from './queue.js';
 
 type Command = {
   data: SlashCommandBuilder;
@@ -179,6 +183,31 @@ export const getDirectMessageChannel = async (discordUserId) => {
 
   return user.createDM();
 };
+
+export const createUserEmbed = (
+  member: GuildMember,
+  user: User,
+  message: string
+) =>
+  new EmbedBuilder({
+    author: {
+      name: member?.nickname ?? user.username,
+      icon_url: member.avatarURL()
+    },
+    color: getContributorColor(user.id),
+    description: message
+  });
+
+export const createSystemEmbed = (message: string) =>
+  new EmbedBuilder({
+    author: {
+      name: 'StorySpin',
+      icon_url:
+        'https://cdn.discordapp.com/app-icons/1303161150363537508/3cccf7b784a89c14f6e475387cf5e1d1.png?size=512'
+    },
+    color: 0x2e9fe7,
+    description: message
+  });
 
 client.on('interactionCreate', async (interaction) => {
   try {
