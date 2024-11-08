@@ -23,8 +23,8 @@ const session = new LlamaChatSession({
 export const askQuestion = async (question: string) => {
   const context = await model.createContext({
     contextSize: {
-      min: 256,
-      max: 8192
+      min: 128,
+      max: 4096
     },
     flashAttention: true
   });
@@ -40,7 +40,7 @@ export const askQuestion = async (question: string) => {
   ]);
 
   const result = await oneOffSession.completePrompt(question, {
-    maxTokens: 512
+    maxTokens: 256
   });
 
   oneOffSession.dispose();
