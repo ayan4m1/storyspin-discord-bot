@@ -4,27 +4,39 @@ import {
   Client,
   Collection,
   GatewayIntentBits,
-  InteractionType
+  InteractionType,
+  SlashCommandBuilder,
+  Interaction
 } from 'discord.js';
 import { readdirSync } from 'fs';
 
 import { discord as config } from './config.js';
 import { getLogger } from './logging.js';
 
+type Command = {
+  data: SlashCommandBuilder;
+  handler: (interaction: Interaction) => Promise<void>;
+};
+
+const commandRegistry = new Collection<string, Command>();
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers]
 });
 const log = getLogger('discord');
 
-export const loadCommands = async () =>
+export const loadCommands = async (): Promise<Command[]> =>
   await Promise.all(
     readdirSync('./src/commands')
       .filter((file) => file.endsWith('.js'))
-      .map(async (file) => await import(`../commands/${file}`))
+      .map(
+        async (file) =>
+          (await import(`../commands/${file}`)) as unknown as Command
+      )
   );
 
-export const loadHandlers = async () =>
-  await Promise.all(
+export const loadHandlers = async () => {
+  const result = new Map<string, object>();
+  const results = await Promise.all(
     readdirSync('./src/handlers')
       .filter((file) => file.endsWith('.js'))
       .map(async (file) => [
@@ -33,37 +45,32 @@ export const loadHandlers = async () =>
       ])
   );
 
-const registerHandlers = (handlers) => {
-  if (!handlers) {
-    return;
+  for (const [event, handler] of results) {
+    result.set(event, handler);
   }
 
-  for (const [event, handler] of Object.entries(handlers)) {
-    log.info(`Registering event handler for ${event}`);
-    client.on(event, handler);
-  }
+  return result;
 };
 
 export const registerCommandsAndHandlers = async () => {
-  client.commands = new Collection();
-
   const commands = await loadCommands();
 
   for (const command of commands) {
-    client.commands.set(command.data.name, command);
+    commandRegistry.set(command.data.name, command);
     log.info(`Registered command ${command.data.name}`);
   }
 
   const handlers = await loadHandlers();
 
-  for (const [handler, { eventHandlers }] of handlers) {
+  for (const [name, eventHandlers] of handlers.entries()) {
     log.info(
-      `Registering ${
-        Object.values(eventHandlers).length
-      } handlers for ${handler}`
+      `Registering ${Object.values(eventHandlers).length} handlers for ${name}`
     );
 
-    registerHandlers(eventHandlers);
+    for (const [event, handler] of Object.entries(handlers)) {
+      log.info(`Registering event handler for ${event}`);
+      client.on(event, handler);
+    }
   }
 };
 
@@ -121,7 +128,7 @@ export const postEmbed = async (interaction, embed, elements = []) => {
   }
 };
 
-export const connectBot = async () =>
+export const connectBot = async (): Promise<Client> =>
   new Promise((resolve, reject) => {
     try {
       if (!config.botToken) {
@@ -180,7 +187,7 @@ client.on('interactionCreate', async (interaction) => {
     }
 
     const { commandName } = interaction;
-    const command = client.commands.get(commandName);
+    const command = commandRegistry.get(commandName);
 
     if (!command) {
       return log.warn(`Did not find a handler for ${commandName}`);
@@ -195,6 +202,10 @@ client.on('interactionCreate', async (interaction) => {
       content: 'There was an error executing this command!',
       ephemeral: true
     };
+
+    if (!interaction.isCommand()) {
+      return;
+    }
 
     if (interaction.deferred) {
       await interaction.editReply(message);

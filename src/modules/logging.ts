@@ -1,8 +1,7 @@
-import winston from 'winston';
+import { Container, format, transports } from 'winston';
 
 import { logging as config } from './config.js';
 
-const { Container, format, transports } = winston;
 const { combine, label, prettyPrint, printf, timestamp } = format;
 
 const loggers = {};
@@ -23,7 +22,7 @@ const createLogger = (category, categoryLabel) => {
     transports: [
       new transports.Console({
         level: config.level,
-        format: combine.apply(null, formatters)
+        format: combine(...formatters)
       })
     ]
   });

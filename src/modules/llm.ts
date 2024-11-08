@@ -1,6 +1,6 @@
 import { join } from 'path';
 import { readFile, writeFile } from 'fs/promises';
-import { getLlama, LlamaChatSession } from 'node-llama-cpp';
+import { ChatHistoryItem, getLlama, LlamaChatSession } from 'node-llama-cpp';
 
 import { llm } from './config.js';
 import { getRootDirectory } from '../utils/index.js';
@@ -20,7 +20,7 @@ const session = new LlamaChatSession({
   contextSequence: context.getSequence()
 });
 
-export const askQuestion = async (question) => {
+export const askQuestion = async (question: string) => {
   const context = await model.createContext({
     flashAttention: true
   });
@@ -38,12 +38,12 @@ export const askQuestion = async (question) => {
   return result;
 };
 
-export const extendStory = async (prompt, tokens = 128) =>
+export const extendStory = async (prompt: string, tokens = 128) =>
   await session.promptWithMeta(prompt, {
     maxTokens: tokens
   });
 
-export const setContext = async (prompt) => {
+export const setContext = async (prompt: string) => {
   session.setChatHistory([
     {
       type: 'system',
@@ -56,16 +56,16 @@ export const resetContext = async () => {
   session.resetChatHistory();
 };
 
-export const loadContext = async (name) => {
-  const chatHistory = await readFile(
+export const loadContext = async (name: string) => {
+  const chatHistory = (await readFile(
     join(getRootDirectory(), 'contexts', `${name}.json`)
-  );
+  )) as unknown as ChatHistoryItem[];
 
   session.resetChatHistory();
   session.setChatHistory(chatHistory);
 };
 
-export const saveContext = async (name) => {
+export const saveContext = async (name: string) => {
   const chatHistory = session.getChatHistory();
 
   await writeFile(

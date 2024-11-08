@@ -1,8 +1,8 @@
 import { generateRandomHexColor } from '../utils/index.js';
 
-const contributorColors = new Map();
-const contributors = [];
-let nextContributor = null;
+const contributorColors = new Map<string, number>();
+const contributors: string[] = [];
+let nextContributor: string = null;
 
 export const getNextContributor = () => nextContributor;
 
