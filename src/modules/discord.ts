@@ -30,18 +30,15 @@ const log = getLogger('discord');
 
 export const loadCommands = async (): Promise<Command[]> =>
   await Promise.all(
-    readdirSync('./src/commands')
+    readdirSync('./lib/commands')
       .filter((file) => file.endsWith('.js'))
-      .map(
-        async (file) =>
-          (await import(`../commands/${file}`)) as unknown as Command
-      )
+      .map(async (file) => await import(`../commands/${file}`))
   );
 
 export const loadHandlers = async () => {
   const result = new Map<string, object>();
   const results = await Promise.all(
-    readdirSync('./src/handlers')
+    readdirSync('./lib/handlers')
       .filter((file) => file.endsWith('.js'))
       .map(async (file) => [
         file.replace('.js', ''),
