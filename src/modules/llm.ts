@@ -47,7 +47,7 @@ export const setContext = async (prompt: string) => {
   session.setChatHistory([
     {
       type: 'system',
-      text: prompt
+      text: `Please act as a storyteller, expanding on the following story: ${prompt}`
     }
   ]);
 };
