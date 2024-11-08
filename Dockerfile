@@ -22,4 +22,4 @@ RUN npm install
 
 RUN npm run build
 
-CMD ["node", "src/index.js"]
+CMD ["node", "lib/index.js"]
