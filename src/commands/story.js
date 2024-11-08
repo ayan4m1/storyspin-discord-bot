@@ -3,7 +3,13 @@ import { EmbedBuilder, SlashCommandBuilder } from 'discord.js';
 import { discord as config } from '../modules/config.js';
 import { getLogger } from '../modules/logging.js';
 import { getContributorColor, getNextContributor } from '../modules/queue.js';
-import { extendStory, resetContext, setContext } from '../modules/llm.js';
+import {
+  extendStory,
+  loadContext,
+  resetContext,
+  saveContext,
+  setContext
+} from '../modules/llm.js';
 
 const log = getLogger('story');
 
@@ -136,11 +142,22 @@ export const handler = async (interaction) => {
           ]
         });
         break;
-      case 'save':
-      case 'load':
+      case 'save': {
+        const storyName = options.getString('name', true);
+
+        await saveContext(storyName);
+        await interaction.editReply('Saved!');
+        break;
+      }
+      case 'load': {
+        const storyName = options.getString('name', true);
+
+        await loadContext(storyName);
+        await interaction.editReply('Loaded!');
+        break;
+      }
       default:
-        // todo: this
-        await interaction.editReply('To be implemented!');
+        await interaction.editReply('Unknown subcommand!');
         break;
     }
   } catch (error) {

@@ -1,7 +1,9 @@
 import { join } from 'path';
+import { readFile, writeFile } from 'fs/promises';
 import { getLlama, LlamaChatSession } from 'node-llama-cpp';
 
 import { llm } from './config.js';
+import { getRootDirectory } from '../utils/index.js';
 
 const llama = await getLlama();
 const model = await llama.loadModel({
@@ -35,4 +37,23 @@ export const setContext = async (prompt) => {
 
 export const resetContext = async () => {
   session.resetChatHistory();
+};
+
+export const loadContext = async (name) => {
+  const chatHistory = await readFile(
+    join(getRootDirectory(), 'contexts', `${name}.json`)
+  );
+
+  session.resetChatHistory();
+  session.setChatHistory(chatHistory);
+};
+
+export const saveContext = async (name) => {
+  const chatHistory = session.getChatHistory();
+
+  await writeFile(
+    join(getRootDirectory(), 'contexts', `${name}.json`),
+    JSON.stringify(chatHistory),
+    'utf-8'
+  );
 };
