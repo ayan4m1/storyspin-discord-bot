@@ -16,7 +16,7 @@
   "module": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node lib/index.js",
     "lint": "eslint src/**/*.js",
     "build": "rollup -c --configPlugin typescript"
   },
