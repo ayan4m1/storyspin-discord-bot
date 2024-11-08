@@ -78,11 +78,14 @@ export const handler = async (interaction) => {
 
     switch (subCmd) {
       case 'begin': {
-        const context = options.getString('prompt', true);
+        const prompt = options.getString('prompt', true);
 
         await resetContext();
-        await setContext(context);
+        await setContext(prompt);
         await interaction.editReply('Starting story...');
+
+        const result = await extendStory(prompt, 256);
+
         await interaction.channel.send({
           embeds: [
             new EmbedBuilder({
@@ -90,7 +93,16 @@ export const handler = async (interaction) => {
                 name: interaction.member.nickname ?? interaction.user.username
               },
               color: getContributorColor(interaction.user.id),
-              description: context
+              description: prompt
+            }),
+            new EmbedBuilder({
+              author: {
+                name: 'StorySpin',
+                icon_url:
+                  'https://cdn.discordapp.com/app-icons/1303161150363537508/3cccf7b784a89c14f6e475387cf5e1d1.png?size=512'
+              },
+              color: 0x2e9fe7,
+              description: result.responseText
             })
           ]
         });
