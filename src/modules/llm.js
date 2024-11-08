@@ -20,11 +20,28 @@ const session = new LlamaChatSession({
   contextSequence: context.getSequence()
 });
 
-export const extendStory = async (prompt, tokens = 128) => {
-  return await session.promptWithMeta(prompt, {
+export const askQuestion = async (question) => {
+  const context = await model.createContext({
+    flashAttention: true
+  });
+  const oneOffSession = new LlamaChatSession({
+    contextSequence: context.getSequence()
+  });
+
+  const result = await oneOffSession.completePrompt(question, {
+    maxTokens: 512
+  });
+
+  oneOffSession.dispose();
+  context.dispose();
+
+  return result;
+};
+
+export const extendStory = async (prompt, tokens = 128) =>
+  await session.promptWithMeta(prompt, {
     maxTokens: tokens
   });
-};
 
 export const setContext = async (prompt) => {
   session.setChatHistory([
