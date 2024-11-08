@@ -95,7 +95,7 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
         await interaction.channel.send({
           embeds: [
             createUserEmbed(member, user, prompt),
-            createSystemEmbed(result.responseText)
+            createSystemEmbed(result)
           ]
         });
         break;
@@ -116,7 +116,7 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
         await interaction.channel.send({
           embeds: [
             createUserEmbed(member, user, storyText),
-            createSystemEmbed(result.responseText)
+            createSystemEmbed(result)
           ]
         });
         break;
