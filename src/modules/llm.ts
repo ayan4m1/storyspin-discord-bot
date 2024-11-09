@@ -9,6 +9,7 @@ import {
 
 import { llm } from './config.js';
 import { getRootDirectory } from '../utils/index.js';
+import { v4 } from 'uuid';
 
 const llama = await getLlama();
 const model = await llama.loadModel({
@@ -25,7 +26,7 @@ const session = new LlamaChatSession({
   contextSequence: context.getSequence()
 });
 
-export const askQuestion = async (question: string) => {
+export const askQuestion = async (question: string, response?: string) => {
   const context = await model.createContext({
     contextSize: {
       min: 128,
@@ -37,12 +38,19 @@ export const askQuestion = async (question: string) => {
     contextSequence: context.getSequence()
   });
 
-  oneOffSession.setChatHistory([
+  const chatHistory: ChatHistoryItem[] = [
     {
       type: 'system',
       text: 'You are a helpful assistant.'
-    }
-  ]);
+    },
+    { type: 'user', text: question }
+  ];
+
+  if (response) {
+    chatHistory.push({ type: 'model', response: [response] });
+  }
+
+  oneOffSession.setChatHistory(chatHistory);
 
   const result = await oneOffSession.completePrompt(question, {
     maxTokens: 256
@@ -51,8 +59,13 @@ export const askQuestion = async (question: string) => {
   oneOffSession.dispose();
   context.dispose();
 
-  return result;
+  return {
+    id: v4(),
+    response: result
+  };
 };
+
+// export const extendQuestion = async (question: string, response: string) => {};
 
 export const extendStory = async (prompt: string, tokens = 128) =>
   await session.prompt(prompt, {

@@ -1,4 +1,7 @@
 import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
   ChatInputCommandInteraction,
   GuildMember,
   SlashCommandBuilder
@@ -31,8 +34,19 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
     const result = await queueTask(askQuestion(prompt));
 
     await interaction.editReply('Answered!');
+
     await interaction.channel.send({
-      embeds: [createUserEmbed(member, user, `**${prompt}**\n\n${result}`)]
+      embeds: [
+        createUserEmbed(member, user, `**${prompt}**\n\n${result.response}`)
+      ],
+      components: [
+        new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`extend:${result.id}`)
+            .setLabel('Extend')
+            .setStyle(ButtonStyle.Primary)
+        )
+      ]
     });
   } catch (error) {
     log.error(error.message);

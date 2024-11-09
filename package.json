@@ -26,7 +26,10 @@
     "discord-api-types": "^0.37.103",
     "discord.js": "^14.16.3",
     "dotenv": "^16.4.5",
+    "globby": "^14.0.2",
     "node-llama-cpp": "^3.2.0",
+    "url-slug": "^4.0.1",
+    "uuid": "^11.0.2",
     "winston": "^3.16.0"
   },
   "devDependencies": {

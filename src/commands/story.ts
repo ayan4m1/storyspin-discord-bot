@@ -1,7 +1,9 @@
 import {
   ChatInputCommandInteraction,
   GuildMember,
-  SlashCommandBuilder
+  SlashCommandBuilder,
+  TextChannel,
+  ThreadAutoArchiveDuration
 } from 'discord.js';
 
 import { discord as config } from '../modules/config.js';
@@ -15,6 +17,7 @@ import {
   setContext
 } from '../modules/llm.js';
 import { createSystemEmbed, createUserEmbed } from '../modules/discord.js';
+import { slugify } from '../utils/index.js';
 
 const log = getLogger('story');
 
@@ -27,7 +30,13 @@ export const data = new SlashCommandBuilder()
   .addSubcommand((subCmd) =>
     subCmd
       .setName('begin')
-      .setDescription('Starts a story with a given prompt')
+      .setDescription('Starts a story with a given name and prompt')
+      .addStringOption((opt) =>
+        opt
+          .setName('name')
+          .setDescription('Name of the story')
+          .setRequired(true)
+      )
       .addStringOption((opt) =>
         opt.setName('prompt').setDescription('World prompt').setRequired(true)
       )
@@ -36,6 +45,13 @@ export const data = new SlashCommandBuilder()
     subCmd
       .setName('extend')
       .setDescription('Adds to the story')
+      .addStringOption((opt) =>
+        opt
+          .setName('story')
+          .setDescription('The story to extend')
+          .setAutocomplete(true)
+          .setRequired(true)
+      )
       .addStringOption((opt) =>
         opt
           .setName('text')
@@ -84,15 +100,24 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
 
     switch (subCmd) {
       case 'begin': {
+        const storyName = options.getString('name', true);
         const prompt = options.getString('prompt', true);
+
+        await interaction.editReply(`Starting "${storyName}"...`);
 
         await resetContext();
         await setContext(prompt);
-        await interaction.editReply('Starting story...');
 
         const result = await extendStory(prompt, 256);
+        const textChannel = interaction.channel as TextChannel;
+        const threadName = slugify(storyName);
+        const thread = await textChannel.threads.create({
+          name: threadName,
+          autoArchiveDuration: ThreadAutoArchiveDuration.OneHour,
+          reason: storyName
+        });
 
-        await interaction.channel.send({
+        await thread.send({
           embeds: [
             createUserEmbed(member, user, prompt),
             createSystemEmbed(result)
@@ -107,13 +132,17 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
 
         await interaction.editReply('Extending story...');
 
+        const storyName = options.getString('story', true);
         const storyText = options.getString('text', true);
         const result = await extendStory(
           storyText,
           options.getNumber('tokens', false)
         );
 
-        await interaction.channel.send({
+        const textChannel = interaction.channel as TextChannel;
+        const thread = textChannel.threads.resolve(slugify(storyName));
+
+        await thread.send({
           embeds: [
             createUserEmbed(member, user, storyText),
             createSystemEmbed(result)
