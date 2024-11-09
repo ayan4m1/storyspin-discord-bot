@@ -1,13 +1,18 @@
 import { join } from 'path';
 import { readFile, writeFile } from 'fs/promises';
-import { ChatHistoryItem, getLlama, LlamaChatSession } from 'node-llama-cpp';
+import {
+  ChatHistoryItem,
+  getLlama,
+  LlamaChatSession,
+  resolveModelFile
+} from 'node-llama-cpp';
 
 import { llm } from './config.js';
 import { getRootDirectory } from '../utils/index.js';
 
 const llama = await getLlama();
 const model = await llama.loadModel({
-  modelPath: join('/', 'models', llm.modelFile)
+  modelPath: await resolveModelFile(llm.modelFile)
 });
 const context = await model.createContext({
   contextSize: {

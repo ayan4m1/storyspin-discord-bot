@@ -3,7 +3,7 @@ services:
     image: storyspin-bot
     build: .
     volumes:
-      - './models:/models:ro'
+      - './models:/root/.node-llama-cpp/models:ro'
     env_file:
       - .env
     deploy:
