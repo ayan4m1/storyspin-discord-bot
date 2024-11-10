@@ -1,3 +1,4 @@
+import { v4 } from 'uuid';
 import { join } from 'path';
 import { readFile, writeFile } from 'fs/promises';
 import {
@@ -9,7 +10,6 @@ import {
 
 import { llm } from './config.js';
 import { getRootDirectory } from '../utils/index.js';
-import { v4 } from 'uuid';
 
 const llama = await getLlama();
 const model = await llama.loadModel({

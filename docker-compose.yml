@@ -1,11 +1,12 @@
 services:
   bot:
-    image: storyspin-bot
     build: .
     volumes:
       - './models:/root/.node-llama-cpp/models:ro'
     env_file:
       - .env
+    depends_on:
+      - cache
     deploy:
       resources:
         reservations:
@@ -13,3 +14,7 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+  cache:
+    image: redis:latest
+    volumes:
+      - './redis-data:/data'
