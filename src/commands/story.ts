@@ -1,13 +1,15 @@
 import {
   ChatInputCommandInteraction,
+  EmbedBuilder,
   GuildMember,
   SlashCommandBuilder,
   TextChannel,
   ThreadAutoArchiveDuration
 } from 'discord.js';
 
-import { discord as config } from '../modules/config.js';
 import { getLogger } from '../modules/logging.js';
+import { getStoryMapping } from '../modules/cache.js';
+import { discord as config } from '../modules/config.js';
 import { getNextContributor } from '../modules/queue.js';
 import { beginStory, extendStory } from '../modules/llm.js';
 import { createSystemEmbed, createUserEmbed } from '../modules/discord.js';
@@ -123,10 +125,27 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
         });
         break;
       }
-      case 'end':
-      case 'list':
-        await interaction.editReply('To be implemented!');
+      case 'list': {
+        await interaction.editReply('Stories listed!');
+
+        const textChannel = interaction.channel as TextChannel;
+        const storyMapping = await getStoryMapping();
+
+        await interaction.channel.send({
+          embeds: [
+            new EmbedBuilder({
+              description: 'Story List',
+              fields: await Promise.all(
+                Object.entries(storyMapping).map(async ([, name]) => ({
+                  name,
+                  value: `<#${textChannel.threads.resolve(slugify(name)).id}>`
+                }))
+              )
+            })
+          ]
+        });
         break;
+      }
       default:
         await interaction.editReply('Unknown subcommand!');
         break;
