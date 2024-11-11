@@ -1,3 +1,4 @@
+import { connectToCache } from './modules/cache.js';
 import { discord as config } from './modules/config.js';
 import {
   connectBot,
@@ -10,6 +11,7 @@ import { advanceContributors, getNextContributor } from './modules/queue.js';
 
 const log = getLogger('index');
 
+await connectToCache();
 await syncCommands();
 await registerCommandsAndHandlers();
 
