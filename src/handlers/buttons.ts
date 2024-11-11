@@ -1,13 +1,12 @@
-import { basename, join } from 'path';
-import { globby } from 'globby';
 import {
   AutocompleteInteraction,
   ButtonInteraction,
   Interaction
 } from 'discord.js';
 
+import { extendAnswer } from '../modules/llm.js';
 import { getLogger } from '../modules/logging.js';
-import { getRootDirectory } from '../utils/index.js';
+import { getStoryMapping } from '../modules/cache.js';
 
 const log = getLogger('handler');
 
@@ -15,15 +14,17 @@ const handleButton = async (interaction: ButtonInteraction) => {
   try {
     // todo: destructure "member, user" here
     const { customId } = interaction;
-    const [verb, uuid, parameter] = customId.split(/:/);
+    const [verb, uuid] = customId.split(/:/);
 
     await interaction.deferReply();
 
-    if (!verb || !uuid || !parameter) {
+    if (!verb || !uuid) {
       throw new Error('Invalid verb/uuid/parameter!');
     }
 
-    // todo: handle uuid and parameter
+    if (verb === 'extend') {
+      await extendAnswer(uuid);
+    }
   } catch (error) {
     log.error(error.message);
     log.error(error.stack);
@@ -38,14 +39,12 @@ const handleButton = async (interaction: ButtonInteraction) => {
 const handleAutocomplete = async (interaction: AutocompleteInteraction) => {
   try {
     if (interaction.commandName === 'story') {
-      const files = await globby(
-        join(getRootDirectory(), 'contexts', '*.json')
-      );
+      const stories = await getStoryMapping();
 
       await interaction.respond(
-        files.map((fileName) => ({
-          name: basename(fileName, '.json'),
-          value: fileName
+        Object.entries(stories).map(([id, name]) => ({
+          name: name,
+          value: id
         }))
       );
     }

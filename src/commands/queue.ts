@@ -1,8 +1,7 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
 
-import { getLogger } from '../modules/logging.js';
 import { queueUser } from '../modules/queue.js';
-import { getValue } from '../modules/cache.js';
+import { getLogger } from '../modules/logging.js';
 
 const log = getLogger('queue');
 
@@ -10,12 +9,8 @@ export const data = new SlashCommandBuilder()
   .setName('queue')
   .setDescription('Add yourself to the story queue');
 
-export const handler = async (interaction) => {
+export const handler = async (interaction: ChatInputCommandInteraction) => {
   try {
-    const queue = await getValue('test');
-
-    console.dir(queue);
-
     const position = queueUser(interaction.user.id);
 
     if (position === -1) {

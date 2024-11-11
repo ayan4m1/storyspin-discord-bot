@@ -9,13 +9,7 @@ import {
 import { discord as config } from '../modules/config.js';
 import { getLogger } from '../modules/logging.js';
 import { getNextContributor } from '../modules/queue.js';
-import {
-  extendStory,
-  loadContext,
-  resetContext,
-  saveContext,
-  setContext
-} from '../modules/llm.js';
+import { beginStory, extendStory } from '../modules/llm.js';
 import { createSystemEmbed, createUserEmbed } from '../modules/discord.js';
 import { slugify } from '../utils/index.js';
 
@@ -24,9 +18,6 @@ const log = getLogger('story');
 export const data = new SlashCommandBuilder()
   .setName('story')
   .setDescription('Manage the active story')
-  .addSubcommand((subCmd) =>
-    subCmd.setName('end').setDescription('Stops the current story')
-  )
   .addSubcommand((subCmd) =>
     subCmd
       .setName('begin')
@@ -67,22 +58,6 @@ export const data = new SlashCommandBuilder()
       )
   )
   .addSubcommand((subCmd) =>
-    subCmd
-      .setName('save')
-      .setDescription('Saves the current story')
-      .addStringOption((opt) =>
-        opt.setName('name').setDescription('The story name').setRequired(true)
-      )
-  )
-  .addSubcommand((subCmd) =>
-    subCmd
-      .setName('load')
-      .setDescription('Loads a saved story')
-      .addStringOption((opt) =>
-        opt.setName('name').setDescription('The story name').setRequired(true)
-      )
-  )
-  .addSubcommand((subCmd) =>
     subCmd.setName('list').setDescription('Lists the saved stories')
   );
 
@@ -105,22 +80,19 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
 
         await interaction.editReply(`Starting "${storyName}"...`);
 
-        await resetContext();
-        await setContext(prompt);
-
-        const result = await extendStory(prompt, 256);
+        const story = await beginStory(prompt);
         const textChannel = interaction.channel as TextChannel;
         const threadName = slugify(storyName);
         const thread = await textChannel.threads.create({
           name: threadName,
-          autoArchiveDuration: ThreadAutoArchiveDuration.OneHour,
+          autoArchiveDuration: ThreadAutoArchiveDuration.OneDay,
           reason: storyName
         });
 
         await thread.send({
           embeds: [
             createUserEmbed(member, user, prompt),
-            createSystemEmbed(result)
+            createSystemEmbed(story.response)
           ]
         });
         break;
@@ -130,52 +102,31 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
           return await interaction.editReply('Its not your turn!');
         }
 
-        await interaction.editReply('Extending story...');
-
         const storyName = options.getString('story', true);
         const storyText = options.getString('text', true);
+
+        await interaction.editReply(`Extending "${storyName}"...`);
+
         const result = await extendStory(
+          storyName,
           storyText,
           options.getNumber('tokens', false)
         );
-
         const textChannel = interaction.channel as TextChannel;
         const thread = textChannel.threads.resolve(slugify(storyName));
 
         await thread.send({
           embeds: [
             createUserEmbed(member, user, storyText),
-            createSystemEmbed(result)
+            createSystemEmbed(result.response)
           ]
         });
         break;
       }
       case 'end':
-        await resetContext();
-        await interaction.editReply('Story ended!');
-        await interaction.channel.send({
-          embeds: [createSystemEmbed('Story ended!')]
-        });
+      case 'list':
+        await interaction.editReply('To be implemented!');
         break;
-      case 'save': {
-        const storyName = options.getString('name', true);
-
-        await saveContext(storyName);
-        await interaction.editReply('Saved!');
-        await interaction.channel.send('The story has been saved!');
-        break;
-      }
-      case 'load': {
-        const storyName = options.getString('name', true);
-
-        // todo: get chat history so we can reply it
-        await loadContext(storyName);
-        await interaction.editReply('Loaded!');
-        await interaction.channel.send(
-          `The story "${storyName}" has been loaded!`
-        );
-        break;
-      }
       default:
         await interaction.editReply('Unknown subcommand!');
         break;

@@ -1,6 +1,4 @@
 import { v4 } from 'uuid';
-import { join } from 'path';
-import { readFile, writeFile } from 'fs/promises';
 import {
   ChatHistoryItem,
   getLlama,
@@ -9,97 +7,114 @@ import {
 } from 'node-llama-cpp';
 
 import { llm } from './config.js';
-import { getRootDirectory } from '../utils/index.js';
+import { findStoryByName, getChatContext, updateChatContext } from './cache.js';
+
+type QuestionResponse = {
+  id: string;
+  response: string;
+};
+
+type StoryResponse = {
+  id: string;
+  input: string;
+  response: string;
+};
 
 const llama = await getLlama();
 const model = await llama.loadModel({
   modelPath: await resolveModelFile(llm.modelFile)
 });
-const context = await model.createContext({
-  contextSize: {
-    min: 256,
-    max: 16384
-  },
-  flashAttention: true
-});
-const session = new LlamaChatSession({
-  contextSequence: context.getSequence()
-});
 
-export const askQuestion = async (question: string, response?: string) => {
-  const context = await model.createContext({
-    contextSize: {
-      min: 128,
-      max: 4096
-    },
-    flashAttention: true
-  });
-  const oneOffSession = new LlamaChatSession({
+const createChatSession = async (chatHistory?: ChatHistoryItem[]) => {
+  const context = await model.createContext({ flashAttention: true });
+  const session = new LlamaChatSession({
     contextSequence: context.getSequence()
   });
 
-  const chatHistory: ChatHistoryItem[] = [
+  if (chatHistory) {
+    session.setChatHistory(chatHistory);
+  }
+
+  return session;
+};
+
+export const askQuestion = async (
+  question: string
+): Promise<QuestionResponse> => {
+  const id = v4();
+  const chatSession = await createChatSession([
     {
       type: 'system',
       text: 'You are a helpful assistant.'
-    },
-    { type: 'user', text: question }
-  ];
-
-  if (response) {
-    chatHistory.push({ type: 'model', response: [response] });
-  }
-
-  oneOffSession.setChatHistory(chatHistory);
-
-  const result = await oneOffSession.completePrompt(question, {
+    }
+  ]);
+  const response = await chatSession.completePrompt(question, {
     maxTokens: 256
   });
 
-  oneOffSession.dispose();
-  context.dispose();
+  await updateChatContext(id, chatSession.getChatHistory());
+
+  chatSession.context.dispose();
+  chatSession.dispose();
 
   return {
-    id: v4(),
-    response: result
+    id,
+    response
   };
 };
 
-// export const extendQuestion = async (question: string, response: string) => {};
+export const extendAnswer = async (id: string): Promise<QuestionResponse> => {
+  const chatHistory = await getChatContext(id);
+  const chatSession = await createChatSession(chatHistory);
+  const response = await chatSession.completePrompt(
+    'Please elaborate on your answer.',
+    { maxTokens: 128 }
+  );
 
-export const extendStory = async (prompt: string, tokens = 128) =>
-  await session.prompt(prompt, {
+  return {
+    id,
+    response
+  };
+};
+
+export const beginStory = async (input: string): Promise<StoryResponse> => {
+  const id = v4();
+  const chatSession = await createChatSession([]);
+  const response = await chatSession.prompt(
+    `Please act as a storyteller, expanding on the following story: ${input}`,
+    { maxTokens: 512 }
+  );
+
+  await updateChatContext(id, chatSession.getChatHistory());
+
+  chatSession.context.dispose();
+  chatSession.dispose();
+
+  return {
+    id,
+    input,
+    response
+  };
+};
+
+export const extendStory = async (
+  storyName: string,
+  input: string,
+  tokens: number = 128
+): Promise<StoryResponse> => {
+  const id = await findStoryByName(storyName);
+  const chatHistory = await getChatContext(id);
+  const chatSession = await createChatSession(chatHistory);
+  const response = await chatSession.completePrompt(input, {
     maxTokens: tokens
   });
 
-export const setContext = async (prompt: string) => {
-  session.setChatHistory([
-    {
-      type: 'system',
-      text: `Please act as a storyteller, expanding on the following story: ${prompt}`
-    }
-  ]);
-};
+  chatSession.context.dispose();
+  chatSession.dispose();
 
-export const resetContext = async () => {
-  session.resetChatHistory();
-};
-
-export const loadContext = async (name: string) => {
-  const chatHistory = (await readFile(
-    join(getRootDirectory(), 'contexts', `${name}.json`)
-  )) as unknown as ChatHistoryItem[];
-
-  session.resetChatHistory();
-  session.setChatHistory(chatHistory);
-};
-
-export const saveContext = async (name: string) => {
-  const chatHistory = session.getChatHistory();
-
-  await writeFile(
-    join(getRootDirectory(), 'contexts', `${name}.json`),
-    JSON.stringify(chatHistory),
-    'utf-8'
-  );
+  return {
+    id,
+    input,
+    response
+  };
 };

@@ -8,9 +8,9 @@ import {
 } from 'discord.js';
 
 import { askQuestion } from '../modules/llm.js';
+import { queueTask } from '../modules/queue.js';
 import { getLogger } from '../modules/logging.js';
 import { createUserEmbed } from '../modules/discord.js';
-import { queueTask } from '../modules/queue.js';
 
 const log = getLogger('ask');
 
@@ -34,11 +34,8 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
     const result = await queueTask(askQuestion(prompt));
 
     await interaction.editReply('Answered!');
-
     await interaction.channel.send({
-      embeds: [
-        createUserEmbed(member, user, `**${prompt}**\n\n${result.response}`)
-      ],
+      embeds: [createUserEmbed(member, user, `**${prompt}**\n\n${result}`)],
       components: [
         new ActionRowBuilder<ButtonBuilder>().addComponents(
           new ButtonBuilder()
