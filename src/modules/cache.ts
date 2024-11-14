@@ -61,6 +61,7 @@ export const getChatContext = async (
   id: string
 ): Promise<ChatHistoryItem[]> => {
   const exists = await client.exists(id);
+
   if (!exists) {
     return [];
   }

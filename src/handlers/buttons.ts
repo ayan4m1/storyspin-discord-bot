@@ -7,6 +7,7 @@ import {
 import { extendAnswer } from '../modules/llm.js';
 import { getLogger } from '../modules/logging.js';
 import { getStoryMapping } from '../modules/cache.js';
+import { queueUser } from '../modules/queue.js';
 
 const log = getLogger('handler');
 
@@ -22,8 +23,17 @@ const handleButton = async (interaction: ButtonInteraction) => {
       throw new Error('Invalid verb/uuid/parameter!');
     }
 
-    if (verb === 'extend') {
-      await extendAnswer(uuid);
+    switch (verb) {
+      case 'extend':
+        await extendAnswer(uuid);
+
+        await interaction.editReply('Extended!');
+        break;
+      case 'queue':
+        queueUser(uuid);
+
+        await interaction.editReply('Queued!');
+        break;
     }
   } catch (error) {
     log.error(error.message);

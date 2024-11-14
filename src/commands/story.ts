@@ -1,4 +1,6 @@
 import {
+  ActionRowBuilder,
+  ButtonBuilder,
   ChatInputCommandInteraction,
   EmbedBuilder,
   GuildMember,
@@ -9,7 +11,6 @@ import {
 
 import { getLogger } from '../modules/logging.js';
 import { getStoryMapping } from '../modules/cache.js';
-import { discord as config } from '../modules/config.js';
 import { getNextContributor } from '../modules/queue.js';
 import { beginStory, extendStory } from '../modules/llm.js';
 import { createSystemEmbed, createUserEmbed } from '../modules/discord.js';
@@ -65,10 +66,6 @@ export const data = new SlashCommandBuilder()
 
 export const handler = async (interaction: ChatInputCommandInteraction) => {
   try {
-    if (interaction.channel.id !== config.storyChannelId) {
-      return await interaction.reply('Wrong channel!');
-    }
-
     await interaction.deferReply({ ephemeral: true });
 
     const { options, user } = interaction;
@@ -95,6 +92,15 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
           embeds: [
             createUserEmbed(member, user, prompt),
             createSystemEmbed(story.response)
+          ],
+          components: [
+            new ActionRowBuilder<ButtonBuilder>({
+              components: [
+                new ButtonBuilder()
+                  .setLabel('Queue')
+                  .setCustomId(`queue:${interaction.user.id}`)
+              ]
+            })
           ]
         });
         break;
@@ -121,6 +127,15 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
           embeds: [
             createUserEmbed(member, user, storyText),
             createSystemEmbed(result.response)
+          ],
+          components: [
+            new ActionRowBuilder<ButtonBuilder>({
+              components: [
+                new ButtonBuilder()
+                  .setLabel('Queue')
+                  .setCustomId(`queue:${interaction.user.id}`)
+              ]
+            })
           ]
         });
         break;

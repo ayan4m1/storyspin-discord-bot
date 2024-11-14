@@ -11,7 +11,7 @@ let nextContributor: string = null;
 
 export const getNextContributor = () => nextContributor;
 
-export const queueUser = (userId) => {
+export const queueUser = (userId: string) => {
   if (contributors.includes(userId)) {
     return -1;
   }
