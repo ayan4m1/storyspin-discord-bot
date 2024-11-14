@@ -37,7 +37,7 @@ export const loadCommands = async (): Promise<Command[]> =>
   );
 
 export const loadHandlers = async () => {
-  const result = new Map<string, object>();
+  const result = new Map<string, (interaction: Interaction) => Promise<void>>();
   const results = await Promise.all(
     readdirSync('./lib/handlers')
       .filter((file) => file.endsWith('.js'))
