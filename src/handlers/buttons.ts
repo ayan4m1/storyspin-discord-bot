@@ -1,6 +1,7 @@
 import {
   AutocompleteInteraction,
   ButtonInteraction,
+  Events,
   Interaction
 } from 'discord.js';
 
@@ -48,6 +49,7 @@ const handleButton = async (interaction: ButtonInteraction) => {
 
 const handleAutocomplete = async (interaction: AutocompleteInteraction) => {
   try {
+    console.dir(interaction.commandName);
     if (interaction.commandName === 'story') {
       const stories = await getStoryMapping();
 
@@ -61,11 +63,14 @@ const handleAutocomplete = async (interaction: AutocompleteInteraction) => {
   } catch (error) {
     log.error(error.message);
     log.error(error.stack);
+    if (!interaction.responded) {
+      await interaction.respond([]);
+    }
   }
 };
 
 export const eventHandlers = {
-  interactionCreate: async (interaction: Interaction) => {
+  [Events.InteractionCreate]: async (interaction: Interaction) => {
     if (interaction.isButton()) {
       return handleButton(interaction);
     } else if (interaction.isAutocomplete()) {
