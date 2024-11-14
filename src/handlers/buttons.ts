@@ -49,7 +49,6 @@ const handleButton = async (interaction: ButtonInteraction) => {
 
 const handleAutocomplete = async (interaction: AutocompleteInteraction) => {
   try {
-    console.dir(interaction.commandName);
     if (interaction.commandName === 'story') {
       const stories = await getStoryMapping();
 

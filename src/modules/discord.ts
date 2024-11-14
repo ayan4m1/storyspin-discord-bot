@@ -9,7 +9,8 @@ import {
   Interaction,
   GuildMember,
   User,
-  EmbedBuilder
+  EmbedBuilder,
+  Events
 } from 'discord.js';
 import { readdirSync } from 'fs';
 
@@ -68,7 +69,7 @@ export const registerCommandsAndHandlers = async () => {
       `Registering ${Object.values(eventHandlers).length} handlers for ${name}`
     );
 
-    for (const [event, handler] of Object.entries(handlers)) {
+    for (const [event, handler] of Object.entries(eventHandlers)) {
       log.info(`Registering event handler for ${event}`);
       client.on(event, handler);
     }
@@ -206,7 +207,7 @@ export const createSystemEmbed = (message: string) =>
     description: message
   });
 
-client.on('interactionCreate', async (interaction) => {
+client.on(Events.InteractionCreate, async (interaction) => {
   try {
     if (interaction.type !== InteractionType.ApplicationCommand) {
       return;
