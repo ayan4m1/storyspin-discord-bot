@@ -48,7 +48,7 @@ export const askQuestion = async (
       text: 'You are a helpful assistant.'
     }
   ]);
-  const response = await chatSession.completePrompt(question, {
+  const response = await chatSession.prompt(question, {
     maxTokens: 256
   });
 
@@ -65,19 +65,16 @@ export const askQuestion = async (
 
 export const extendAnswer = async (id: string): Promise<QuestionResponse> => {
   const chatHistory = await getChatContext(id);
-
-  console.dir(chatHistory);
-
   const chatSession = await createChatSession(chatHistory);
-  const response = await chatSession.completePrompt(
+  const response = await chatSession.prompt(
     'Please elaborate on your previous answer.',
     { maxTokens: 128 }
   );
 
-  chatSession.getChatHistory().push({
-    type: 'model',
-    response: [response]
-  });
+  // chatSession.getChatHistory().push({
+  //   type: 'model',
+  //   response: [response]
+  // });
 
   await updateChatContext(id, chatSession.getChatHistory());
 
@@ -92,11 +89,21 @@ export const extendAnswer = async (id: string): Promise<QuestionResponse> => {
 
 export const beginStory = async (input: string): Promise<StoryResponse> => {
   const id = v4();
+  // const chatHistory: ChatHistoryItem[] = [];
   const chatSession = await createChatSession([]);
   const response = await chatSession.prompt(
     `Please act as a storyteller, expanding on the following story: ${input}`,
     { maxTokens: 512 }
   );
+
+  // chatHistory.push({
+  //   type: 'user',
+  //   text: input
+  // });
+  // chatHistory.push({
+  //   type: 'model',
+  //   response: [response]
+  // });
 
   await updateChatContext(id, chatSession.getChatHistory());
 
@@ -118,14 +125,18 @@ export const extendStory = async (
   const id = await findStoryByName(storyName);
   const chatHistory = await getChatContext(id);
   const chatSession = await createChatSession(chatHistory);
-  const response = await chatSession.completePrompt(input, {
+  const response = await chatSession.prompt(input, {
     maxTokens: tokens
   });
 
-  chatSession.getChatHistory().push({
-    type: 'model',
-    response: [response]
-  });
+  // chatHistory.push({
+  //   type: 'user',
+  //   text: input
+  // });
+  // chatHistory.push({
+  //   type: 'model',
+  //   response: [response]
+  // });
 
   await updateChatContext(id, chatSession.getChatHistory());
 
