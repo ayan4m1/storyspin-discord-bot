@@ -74,6 +74,11 @@ export const extendAnswer = async (id: string): Promise<QuestionResponse> => {
     { maxTokens: 128 }
   );
 
+  chatSession.getChatHistory().push({
+    type: 'model',
+    response: [response]
+  });
+
   await updateChatContext(id, chatSession.getChatHistory());
 
   chatSession.context.dispose();
@@ -115,6 +120,11 @@ export const extendStory = async (
   const chatSession = await createChatSession(chatHistory);
   const response = await chatSession.completePrompt(input, {
     maxTokens: tokens
+  });
+
+  chatSession.getChatHistory().push({
+    type: 'model',
+    response: [response]
   });
 
   await updateChatContext(id, chatSession.getChatHistory());
