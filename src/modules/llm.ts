@@ -65,11 +65,19 @@ export const askQuestion = async (
 
 export const extendAnswer = async (id: string): Promise<QuestionResponse> => {
   const chatHistory = await getChatContext(id);
+
+  console.dir(chatHistory);
+
   const chatSession = await createChatSession(chatHistory);
   const response = await chatSession.completePrompt(
-    'Please elaborate on your answer.',
+    'Please elaborate on your previous answer.',
     { maxTokens: 128 }
   );
+
+  await updateChatContext(id, chatSession.getChatHistory());
+
+  chatSession.context.dispose();
+  chatSession.dispose();
 
   return {
     id,
@@ -108,6 +116,8 @@ export const extendStory = async (
   const response = await chatSession.completePrompt(input, {
     maxTokens: tokens
   });
+
+  await updateChatContext(id, chatSession.getChatHistory());
 
   chatSession.context.dispose();
   chatSession.dispose();
