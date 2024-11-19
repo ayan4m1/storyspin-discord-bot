@@ -1,10 +1,52 @@
 import { createClient } from 'redis';
 import { ChatHistoryItem } from 'node-llama-cpp';
+import { ThreadChannelResolvable, UserResolvable } from 'discord.js';
 
+import { generateRandomHexColor } from '../utils/index.js';
+
+const queueMap = new Map<string, string[]>();
+const userColorMap = new Map<string, number>();
 const mappingKey = 'storyMapping';
 const client = createClient({
   url: 'redis://cache'
 });
+
+export const getCurrentContributor = (threadId: ThreadChannelResolvable) => {
+  if (!queueMap.has(threadId.toString())) {
+    queueMap.set(threadId.toString(), []);
+  }
+
+  return queueMap.get(threadId.toString())[0];
+};
+
+export const dequeueContributor = (threadId: ThreadChannelResolvable) => {
+  if (!queueMap.has(threadId.toString())) {
+    queueMap.set(threadId.toString(), []);
+  }
+
+  return queueMap.get(threadId.toString()).shift();
+};
+
+export const enqueueContributor = (
+  threadId: ThreadChannelResolvable,
+  userId: UserResolvable
+) => {
+  if (!queueMap.has(threadId.toString())) {
+    queueMap.set(threadId.toString(), []);
+  }
+
+  queueMap.get(threadId.toString()).push(userId.toString());
+};
+
+export const getContributorColor = (userId: UserResolvable) => {
+  if (!userColorMap.has(userId.toString())) {
+    const newColor = generateRandomHexColor();
+
+    userColorMap.set(userId.toString(), newColor);
+  }
+
+  return userColorMap.get(userId.toString());
+};
 
 export const connectToCache = () => client.connect();
 

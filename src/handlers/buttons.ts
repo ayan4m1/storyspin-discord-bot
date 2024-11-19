@@ -5,10 +5,9 @@ import {
   Interaction
 } from 'discord.js';
 
-import { queueUser } from '../modules/queue.js';
 import { extendAnswer } from '../modules/llm.js';
 import { getLogger } from '../modules/logging.js';
-import { getStoryMapping } from '../modules/cache.js';
+import { enqueueContributor } from '../modules/cache.js';
 import { createSystemEmbed } from '../modules/discord.js';
 
 const log = getLogger('handler');
@@ -29,16 +28,14 @@ const handleButton = async (interaction: ButtonInteraction) => {
       case 'extend': {
         const result = await extendAnswer(uuid);
 
-        await interaction.editReply('Extended!');
-
         await interaction.channel.send({
           embeds: [createSystemEmbed(result.response)]
         });
+        await interaction.editReply('Extended!');
         break;
       }
       case 'queue':
-        queueUser(uuid);
-
+        enqueueContributor(interaction.channelId, interaction.user.id);
         await interaction.editReply('Queued!');
         break;
     }
@@ -55,16 +52,15 @@ const handleButton = async (interaction: ButtonInteraction) => {
 
 const handleAutocomplete = async (interaction: AutocompleteInteraction) => {
   try {
-    if (interaction.commandName === 'story') {
-      const stories = await getStoryMapping();
-
-      await interaction.respond(
-        Object.entries(stories).map(([id, name]) => ({
-          name: name,
-          value: id
-        }))
-      );
-    }
+    // if (interaction.commandName === 'story') {
+    //   const stories = await getStoryMapping();
+    //   await interaction.respond(
+    //     Object.entries(stories).map(([id, name]) => ({
+    //       name: name,
+    //       value: id
+    //     }))
+    //   );
+    // }
   } catch (error) {
     log.error(error.message);
     log.error(error.stack);

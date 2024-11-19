@@ -10,8 +10,8 @@ import {
 } from 'discord.js';
 
 import { getLogger } from '../modules/logging.js';
-import { getStoryMapping } from '../modules/cache.js';
-import { getNextContributor } from '../modules/queue.js';
+import { getCurrentContributor, getStoryMapping } from '../modules/cache.js';
+import { queueTask } from '../modules/queue.js';
 import { beginStory, extendStory } from '../modules/llm.js';
 import { createSystemEmbed, createUserEmbed } from '../modules/discord.js';
 import { slugify } from '../utils/index.js';
@@ -106,7 +106,7 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
         break;
       }
       case 'extend': {
-        if (user.id !== getNextContributor()) {
+        if (user.id !== getCurrentContributor(interaction.channelId)) {
           return await interaction.editReply('Its not your turn!');
         }
 
@@ -115,10 +115,8 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
 
         await interaction.editReply(`Extending "${storyName}"...`);
 
-        const result = await extendStory(
-          storyName,
-          storyText,
-          options.getNumber('tokens', false)
+        const result = await queueTask(
+          extendStory(storyName, storyText, options.getNumber('tokens', false))
         );
         const textChannel = interaction.channel as TextChannel;
         const thread = textChannel.threads.resolve(slugify(storyName));
