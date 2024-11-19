@@ -18,9 +18,15 @@ import { discord as config } from './config.js';
 import { getLogger } from './logging.js';
 import { getContributorColor } from './queue.js';
 
+type HandlerFunc = (interaction: Interaction) => Promise<void>;
+
 type Command = {
   data: SlashCommandBuilder;
-  handler: (interaction: Interaction) => Promise<void>;
+  handler: HandlerFunc;
+};
+
+type HandlerModule = {
+  eventHandlers: Record<string, HandlerFunc>;
 };
 
 const commandRegistry = new Collection<string, Command>();
@@ -37,7 +43,7 @@ export const loadCommands = async (): Promise<Command[]> =>
   );
 
 export const loadHandlers = async () => {
-  const result = new Map<string, (interaction: Interaction) => Promise<void>>();
+  const result = new Map<string, HandlerModule>();
   const results = await Promise.all(
     readdirSync('./lib/handlers')
       .filter((file) => file.endsWith('.js'))
@@ -64,7 +70,7 @@ export const registerCommandsAndHandlers = async () => {
 
   const handlers = await loadHandlers();
 
-  for (const [name, eventHandlers] of handlers.entries()) {
+  for (const [name, { eventHandlers }] of handlers.entries()) {
     log.info(
       `Registering ${Object.values(eventHandlers).length} handlers for ${name}`
     );
