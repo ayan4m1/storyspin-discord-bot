@@ -35,7 +35,9 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
 
     await interaction.editReply('Answered!');
     await interaction.channel.send({
-      embeds: [createUserEmbed(member, user, `**${prompt}**\n\n${result}`)],
+      embeds: [
+        createUserEmbed(member, user, `**${prompt}**\n\n${result.response}`)
+      ],
       components: [
         new ActionRowBuilder<ButtonBuilder>().addComponents(
           new ButtonBuilder()
