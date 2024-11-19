@@ -5,10 +5,11 @@ import {
   Interaction
 } from 'discord.js';
 
+import { queueUser } from '../modules/queue.js';
 import { extendAnswer } from '../modules/llm.js';
 import { getLogger } from '../modules/logging.js';
 import { getStoryMapping } from '../modules/cache.js';
-import { queueUser } from '../modules/queue.js';
+import { createSystemEmbed } from '../modules/discord.js';
 
 const log = getLogger('handler');
 
@@ -25,11 +26,16 @@ const handleButton = async (interaction: ButtonInteraction) => {
     }
 
     switch (verb) {
-      case 'extend':
-        await extendAnswer(uuid);
+      case 'extend': {
+        const result = await extendAnswer(uuid);
 
         await interaction.editReply('Extended!');
+
+        await interaction.channel.send({
+          embeds: [createSystemEmbed(result.response)]
+        });
         break;
+      }
       case 'queue':
         queueUser(uuid);
 

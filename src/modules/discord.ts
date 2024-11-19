@@ -10,7 +10,8 @@ import {
   GuildMember,
   User,
   EmbedBuilder,
-  Events
+  Events,
+  UserResolvable
 } from 'discord.js';
 import { readdirSync } from 'fs';
 
@@ -153,7 +154,7 @@ export const connectBot = async (): Promise<Client> =>
 
 export const disconnectBot = client.destroy;
 
-const findUserInGuilds = async (discordUserId) => {
+export const findUserInGuilds = async (discordUserId: UserResolvable) => {
   for (const guildId of client.guilds.cache.values()) {
     const guild = client.guilds.resolve(guildId);
     const user = await guild.members.fetch(discordUserId);
