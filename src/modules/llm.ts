@@ -38,6 +38,30 @@ const createChatSession = async (chatHistory?: ChatHistoryItem[]) => {
   return session;
 };
 
+export const askColor = async (color: string): Promise<QuestionResponse> => {
+  const id = v4();
+  const chatSession = await createChatSession([
+    {
+      type: 'system',
+      text: 'You are an expert at color matching and color coordination. Help the user build their desired palette. Provide colors in hex (e.g. #ffffff) format.'
+    }
+  ]);
+  const response = await chatSession.prompt(
+    `Help me find a color to go with ${color}`,
+    {
+      maxTokens: 64
+    }
+  );
+
+  chatSession.context.dispose();
+  chatSession.dispose();
+
+  return {
+    id,
+    response
+  };
+};
+
 export const askQuestion = async (
   question: string
 ): Promise<QuestionResponse> => {

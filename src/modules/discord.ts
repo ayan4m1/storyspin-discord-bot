@@ -17,7 +17,12 @@ import { readdirSync } from 'fs';
 
 import { discord as config } from './config.js';
 import { getLogger } from './logging.js';
-import { getContributorColor } from './queue.js';
+import {
+  dequeueContributor,
+  getContributorColor,
+  queueMap,
+  rateLimiterMap
+} from './cache.js';
 
 type HandlerFunc = (interaction: Interaction) => Promise<void>;
 
@@ -214,6 +219,14 @@ export const createSystemEmbed = (message: string) =>
     description: message
   });
 
+export const notifyUser = async (userId: UserResolvable) => {
+  const dmChannel = await getDirectMessageChannel(userId);
+
+  await dmChannel.send(
+    `It's your turn! Use /story extend in the <#${config.storyChannelId}> channel!`
+  );
+};
+
 client.on(Events.InteractionCreate, async (interaction) => {
   try {
     if (interaction.type !== InteractionType.ApplicationCommand) {
@@ -250,3 +263,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
   }
 });
+
+setInterval(() => {
+  for (const threadId of queueMap.keys()) {
+    const nextSpeaker = dequeueContributor(threadId);
+
+    if (nextSpeaker) {
+      rateLimiterMap.get(threadId).schedule(() => notifyUser(nextSpeaker));
+    }
+  }
+}, 5000);

@@ -1,10 +1,14 @@
+import Bottleneck from 'bottleneck';
 import { createClient } from 'redis';
 import { ChatHistoryItem } from 'node-llama-cpp';
 import { ThreadChannelResolvable, UserResolvable } from 'discord.js';
 
 import { generateRandomHexColor } from '../utils/index.js';
 
-const queueMap = new Map<string, string[]>();
+type Stories = Record<string, string>;
+
+export const rateLimiterMap = new Map<string, Bottleneck>();
+export const queueMap = new Map<string, string[]>();
 const userColorMap = new Map<string, number>();
 const mappingKey = 'storyMapping';
 const client = createClient({
@@ -31,6 +35,15 @@ export const enqueueContributor = (
   threadId: ThreadChannelResolvable,
   userId: UserResolvable
 ) => {
+  if (!rateLimiterMap.has(threadId.toString())) {
+    rateLimiterMap.set(
+      threadId.toString(),
+      new Bottleneck({
+        maxConcurrent: 1,
+        minTime: 30000
+      })
+    );
+  }
   if (!queueMap.has(threadId.toString())) {
     queueMap.set(threadId.toString(), []);
   }
@@ -57,7 +70,7 @@ export const getStoryMapping = async () => {
     await client.set(mappingKey, '{}');
   }
 
-  return JSON.parse(await client.get(mappingKey)) as unknown as object;
+  return JSON.parse(await client.get(mappingKey)) as unknown as Stories;
 };
 
 export const updateStoryMapping = async (
@@ -72,7 +85,7 @@ export const updateStoryMapping = async (
 
   const mappingObj = JSON.parse(
     await client.get(mappingKey)
-  ) as unknown as object;
+  ) as unknown as Stories;
 
   mappingObj[id] = name;
 
@@ -88,7 +101,7 @@ export const findStoryByName = async (name: string): Promise<string> => {
 
   const mappingObj = JSON.parse(
     await client.get(mappingKey)
-  ) as unknown as object;
+  ) as unknown as Stories;
 
   for (const [id, storyName] of Object.entries(mappingObj)) {
     if (storyName === name) {
