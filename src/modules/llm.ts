@@ -49,7 +49,7 @@ export const askColor = async (color: string): Promise<QuestionResponse> => {
   const response = await chatSession.prompt(
     `Help me find a color to go with ${color}`,
     {
-      maxTokens: 64
+      maxTokens: 512
     }
   );
 
