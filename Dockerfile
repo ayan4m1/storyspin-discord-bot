@@ -1,24 +1,41 @@
-FROM node:lts
+
+FROM node:22
+
+# Replace `x86_64` with `sbsa` for ARM64
+ENV NVARCH=x86_64
+ENV INSTALL_CUDA_VERSION=12.6
+
+SHELL ["/bin/bash", "-c"]
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gnupg2 curl ca-certificates && \
+    curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/${NVARCH}/3bf863cc.pub | apt-key add - && \
+    echo "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/${NVARCH} /" > /etc/apt/sources.list.d/cuda.list && \
+    apt-get purge --autoremove -y curl && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    "cuda-cudart-${INSTALL_CUDA_VERSION//./-}" \
+    "cuda-compat-${INSTALL_CUDA_VERSION//./-}" \
+    "cuda-libraries-${INSTALL_CUDA_VERSION//./-}" \
+    "libnpp-${INSTALL_CUDA_VERSION//./-}" \
+    "cuda-nvtx-${INSTALL_CUDA_VERSION//./-}" \
+    "libcusparse-${INSTALL_CUDA_VERSION//./-}" \
+    "libcublas-${INSTALL_CUDA_VERSION//./-}" \
+    git cmake clang libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-mark hold "libcublas-${INSTALL_CUDA_VERSION//./-}"
+
+RUN echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf \
+    && echo "/usr/local/nvidia/lib64" >> /etc/ld.so.conf.d/nvidia.conf
+
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=all
 
 WORKDIR /usr/src/app
-
-RUN apt-get update && apt-get -y dist-upgrade
-
-RUN apt-get install -y build-essential cmake
-
-RUN wget -nv https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-ubuntu2404.pin && \
-    mv cuda-ubuntu2404.pin /etc/apt/preferences.d/cuda-repository-pin-600 && \
-    wget -nv https://developer.download.nvidia.com/compute/cuda/12.6.2/local_installers/cuda-repo-ubuntu2404-12-6-local_12.6.2-560.35.03-1_amd64.deb && \
-    dpkg -i cuda-repo-ubuntu2404-12-6-local_12.6.2-560.35.03-1_amd64.deb && \
-    cp /var/cuda-repo-ubuntu2404-12-6-local/cuda-*-keyring.gpg /usr/share/keyrings/ && \
-    apt-get update && \
-    apt-get -y install cuda-toolkit-12-6
-
-RUN npx -y node-llama-cpp source download --gpu cuda
-
 COPY . .
 
-RUN npm install
+RUN npm ci
 
 RUN npm run build
 
