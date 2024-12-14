@@ -1,5 +1,5 @@
 
-FROM node:22
+FROM node:lts
 
 # Replace `x86_64` with `sbsa` for ARM64
 ENV NVARCH=x86_64
