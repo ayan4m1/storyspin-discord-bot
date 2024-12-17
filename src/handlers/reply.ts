@@ -24,11 +24,11 @@ export const eventHandlers = {
       return;
     }
 
-    const { id, author: user, member } = message;
+    const { author: user, member, reference } = message;
 
-    log.info(`User replied to message ${message.id}`);
+    log.info(`User replied to message ${reference.messageId}`);
 
-    const contextId = messageMap[id];
+    const contextId = messageMap[reference.messageId];
     const result = await queueTask(extendAnswer(contextId, message.content));
 
     const reply = await (message.channel as TextChannel).send({
