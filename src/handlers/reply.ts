@@ -11,19 +11,16 @@ const log = getLogger('reply');
 export const eventHandlers = {
   [Events.MessageCreate]: async (message: Message) => {
     if (message.type !== MessageType.Reply) {
-      console.log('Message is not a reply');
       return;
     }
 
     const messageMap = await getMessageMapping();
 
-    if (!messageMap[message.id]) {
-      console.log('Message is not tracked');
+    if (!messageMap[message.reference?.messageId]) {
       return;
     }
 
     if (!message.channel.isTextBased()) {
-      console.log('Channel is not textual');
       return;
     }
 
