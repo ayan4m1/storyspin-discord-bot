@@ -33,7 +33,11 @@ export const eventHandlers = {
 
     const reply = await (message.channel as TextChannel).send({
       embeds: [
-        createUserEmbed(member, user, `**${prompt}**\n${result.response}`)
+        createUserEmbed(
+          member,
+          user,
+          `**${message.content}**\n${result.response}`
+        )
       ]
     });
 
