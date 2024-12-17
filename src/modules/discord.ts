@@ -37,7 +37,11 @@ type HandlerModule = {
 
 const commandRegistry = new Collection<string, Command>();
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers]
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessages
+  ]
 });
 const log = getLogger('discord');
 
