@@ -1,7 +1,13 @@
 import 'dotenv/config';
 
 export const llm = {
-  modelFile: process.env.SS_LLM_MODEL_FILE
+  modelFile: process.env.SS_LLM_MODEL_FILE,
+  sampling: {
+    temperature: parseFloat(process.env.SS_LLM_SAMPLING_TEMPERATURE || '0'),
+    topK: parseFloat(process.env.SS_LLM_SAMPLING_TOP_K || '0'),
+    topP: parseFloat(process.env.SS_LLM_SAMPLING_TOP_P || '1')
+  },
+  tokenRepeatPenalty: parseFloat(process.env.SS_LLM_TOKEN_REPEAT_PENALTY || '0')
 };
 
 export const discord = {

@@ -6,7 +6,7 @@ import {
   resolveModelFile
 } from 'node-llama-cpp';
 
-import { llm } from './config.js';
+import { llm as config } from './config.js';
 import { findStoryByName, getChatContext, updateChatContext } from './cache.js';
 
 type LlamaResponseMeta = {
@@ -33,8 +33,19 @@ type StoryResponse = {
 
 const llama = await getLlama();
 const model = await llama.loadModel({
-  modelPath: await resolveModelFile(llm.modelFile)
+  modelPath: await resolveModelFile(config.modelFile)
 });
+
+const promptOptions = {
+  temperature: config.sampling.temperature,
+  seed: Math.random() * Number.MAX_SAFE_INTEGER,
+  topK: config.sampling.topK,
+  topP: config.sampling.topP,
+  repeatPenalty: {
+    frequencyPenalty: config.tokenRepeatPenalty,
+    penalizeNewLine: false
+  }
+};
 
 const createChatSession = async (chatHistory?: ChatHistoryItem[]) => {
   const context = await model.createContext({ flashAttention: true });
@@ -66,7 +77,8 @@ const trimResponse = (response: LlamaResponseMeta): void => {
 };
 
 export const askQuestion = async (
-  question: string
+  question: string,
+  tokens: number = 256
 ): Promise<QuestionResponse> => {
   const id = v4();
   const chatSession = await createChatSession([
@@ -76,7 +88,8 @@ export const askQuestion = async (
     }
   ]);
   const response = await chatSession.promptWithMeta(question, {
-    maxTokens: 256
+    ...promptOptions,
+    maxTokens: tokens
   });
 
   trimResponse(response);
@@ -98,10 +111,15 @@ export const beginStory = async (
 ): Promise<StoryResponse> => {
   const id = v4();
   const chatSession = await createChatSession([]);
-  const response = await chatSession.prompt(
+  const response = await chatSession.promptWithMeta(
     `Please act as a storyteller. Provide a beginning for the following story: ${input}`,
-    { maxTokens: tokens }
+    {
+      ...promptOptions,
+      maxTokens: tokens
+    }
   );
+
+  trimResponse(response);
 
   await updateChatContext(id, chatSession.getChatHistory());
 
@@ -111,7 +129,7 @@ export const beginStory = async (
   return {
     id,
     input,
-    response
+    response: response.responseText
   };
 };
 
@@ -123,6 +141,7 @@ export const extendAnswer = async (
   const chatHistory = await getChatContext(id);
   const chatSession = await createChatSession(chatHistory);
   const response = await chatSession.promptWithMeta(input, {
+    ...promptOptions,
     maxTokens: tokens
   });
 
@@ -149,6 +168,7 @@ export const extendStory = async (
   const chatHistory = await getChatContext(id);
   const chatSession = await createChatSession(chatHistory);
   const response = await chatSession.promptWithMeta(input, {
+    ...promptOptions,
     maxTokens: tokens
   });
 
