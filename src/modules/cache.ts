@@ -6,11 +6,13 @@ import { ThreadChannelResolvable, UserResolvable } from 'discord.js';
 import { generateRandomHexColor } from '../utils/index.js';
 
 type Stories = Record<string, string>;
+type Messages = Record<string, string>;
 
 export const rateLimiterMap = new Map<string, Bottleneck>();
 export const queueMap = new Map<string, string[]>();
 const userColorMap = new Map<string, number>();
-const mappingKey = 'storyMapping';
+const storyMappingKey = 'storyMapping';
+const messageMappingKey = 'messageMapping';
 const client = createClient({
   url: 'redis://cache'
 });
@@ -63,44 +65,73 @@ export const getContributorColor = (userId: UserResolvable) => {
 
 export const connectToCache = () => client.connect();
 
-export const getStoryMapping = async () => {
-  const exists = await client.exists(mappingKey);
+export const getMessageMapping = async () => {
+  const exists = await client.exists(messageMappingKey);
 
   if (!exists) {
-    await client.set(mappingKey, '{}');
+    await client.set(messageMappingKey, '{}');
   }
 
-  return JSON.parse(await client.get(mappingKey)) as unknown as Stories;
+  return JSON.parse(await client.get(messageMappingKey)) as unknown as Messages;
+};
+
+export const updateMessageMapping = async (
+  messageId: string,
+  contextId: string
+): Promise<void> => {
+  const exists = await client.exists(messageMappingKey);
+
+  if (!exists) {
+    await client.set(messageMappingKey, '{}');
+  }
+
+  const mappingObj = JSON.parse(
+    await client.get(messageMappingKey)
+  ) as unknown as Messages;
+
+  mappingObj[messageId] = contextId;
+
+  await client.set(messageMappingKey, JSON.stringify(mappingObj));
 };
 
 export const updateStoryMapping = async (
   id: string,
   name: string
 ): Promise<void> => {
-  const exists = await client.exists(mappingKey);
+  const exists = await client.exists(storyMappingKey);
 
   if (!exists) {
-    await client.set(mappingKey, '{}');
+    await client.set(storyMappingKey, '{}');
   }
 
   const mappingObj = JSON.parse(
-    await client.get(mappingKey)
+    await client.get(storyMappingKey)
   ) as unknown as Stories;
 
   mappingObj[id] = name;
 
-  await client.set(mappingKey, JSON.stringify(mappingObj));
+  await client.set(storyMappingKey, JSON.stringify(mappingObj));
+};
+
+export const getStoryMapping = async () => {
+  const exists = await client.exists(storyMappingKey);
+
+  if (!exists) {
+    await client.set(storyMappingKey, '{}');
+  }
+
+  return JSON.parse(await client.get(storyMappingKey)) as unknown as Stories;
 };
 
 export const findStoryByName = async (name: string): Promise<string> => {
-  const exists = client.exists(mappingKey);
+  const exists = client.exists(storyMappingKey);
 
   if (!exists) {
-    await client.set(mappingKey, '{}');
+    await client.set(storyMappingKey, '{}');
   }
 
   const mappingObj = JSON.parse(
-    await client.get(mappingKey)
+    await client.get(storyMappingKey)
   ) as unknown as Stories;
 
   for (const [id, storyName] of Object.entries(mappingObj)) {

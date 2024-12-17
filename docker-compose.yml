@@ -16,5 +16,6 @@ services:
               capabilities: [gpu]
   cache:
     image: redis:latest
+    command: redis-server --save 60 1 --loglevel warning
     volumes:
       - './redis-data:/data'
