@@ -37,7 +37,7 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
       await interaction.editReply({
         embeds: [
           new EmbedBuilder({
-            description: models.join('\n')
+            description: models.map((model) => ` * ${model}`).join('\n')
           })
         ]
       });
