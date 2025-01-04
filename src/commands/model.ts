@@ -5,6 +5,9 @@ import {
 } from 'discord.js';
 
 import { changeModel, listModels } from '../modules/llm.js';
+import { getLogger } from '../modules/logging.js';
+
+const log = getLogger('model');
 
 export const data = new SlashCommandBuilder()
   .setName('model')
@@ -44,8 +47,14 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
       break;
     }
     case 'change':
-      await changeModel(options.getString('model', true));
-      await interaction.editReply('New model loaded!');
+      try {
+        await changeModel(options.getString('model', true));
+        await interaction.editReply('New model loaded!');
+      } catch (error) {
+        log.error(error.message);
+        log.error(error.stack);
+        await interaction.editReply('Failed to load new model!');
+      }
       break;
   }
 };
