@@ -1,4 +1,6 @@
 import { v4 } from 'uuid';
+import { basename } from 'path';
+import { globby } from 'globby';
 import {
   ChatHistoryItem,
   getLlama,
@@ -74,6 +76,12 @@ const trimResponse = (response: LlamaResponseMeta): void => {
   if (!response.responseText.endsWith('.')) {
     response.responseText += '.';
   }
+};
+
+export const listModels = async () => {
+  const files = await globby('./models/*.gguf');
+
+  return files.map((file) => basename(file, '.gguf'));
 };
 
 export const changeModel = async (modelName: string) => {
