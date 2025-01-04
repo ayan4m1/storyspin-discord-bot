@@ -31,7 +31,7 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
     const prompt = options.getString('prompt', true);
     const result = await queueTask(askQuestion(prompt));
 
-    await interaction.editReply('Answered!');
+    await interaction.deleteReply();
     const message = await interaction.channel.send({
       embeds: [
         createUserEmbed(member, user, `**${prompt}**\n${result.response}`)
