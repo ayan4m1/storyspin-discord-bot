@@ -3,13 +3,13 @@ FROM node:lts
 
 # Replace `x86_64` with `sbsa` for ARM64
 ENV NVARCH=x86_64
-ENV INSTALL_CUDA_VERSION=12.6
+ENV INSTALL_CUDA_VERSION=12.4
 
 SHELL ["/bin/bash", "-c"]
 RUN apt-get update && \
     apt-get install -y --no-install-recommends gnupg2 curl ca-certificates && \
-    curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/${NVARCH}/3bf863cc.pub | apt-key add - && \
-    echo "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/${NVARCH} /" > /etc/apt/sources.list.d/cuda.list && \
+    curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/${NVARCH}/3bf863cc.pub | apt-key add - && \
+    echo "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/${NVARCH} /" > /etc/apt/sources.list.d/cuda.list && \
     apt-get purge --autoremove -y curl && \
     rm -rf /var/lib/apt/lists/*
 
