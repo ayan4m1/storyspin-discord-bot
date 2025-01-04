@@ -32,7 +32,7 @@ type StoryResponse = {
 };
 
 const llama = await getLlama();
-const model = await llama.loadModel({
+let model = await llama.loadModel({
   modelPath: await resolveModelFile(config.modelFile)
 });
 
@@ -74,6 +74,12 @@ const trimResponse = (response: LlamaResponseMeta): void => {
   if (!response.responseText.endsWith('.')) {
     response.responseText += '.';
   }
+};
+
+export const changeModel = async (modelName: string) => {
+  model = await llama.loadModel({
+    modelPath: await resolveModelFile(modelName)
+  });
 };
 
 export const askQuestion = async (
