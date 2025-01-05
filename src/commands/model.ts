@@ -4,7 +4,7 @@ import {
   SlashCommandBuilder
 } from 'discord.js';
 
-import { changeModel, listModels } from '../modules/llm.js';
+import { changeModel, getActiveModel, listModels } from '../modules/llm.js';
 import { getLogger } from '../modules/logging.js';
 
 const log = getLogger('model');
@@ -35,12 +35,18 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
 
   switch (subcommand) {
     case 'list': {
+      const activeModel = getActiveModel();
       const models = await listModels();
 
       await interaction.editReply({
         embeds: [
           new EmbedBuilder({
-            description: models.map((model) => ` * ${model}`).join('\n')
+            description: models
+              .map(
+                (model) =>
+                  ` * ${model === activeModel ? `**${model}**` : model}`
+              )
+              .join('\n')
           })
         ]
       });

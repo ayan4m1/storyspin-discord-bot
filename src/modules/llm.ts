@@ -78,6 +78,8 @@ const trimResponse = (response: LlamaResponseMeta): void => {
   }
 };
 
+export const getActiveModel = () => basename(model.filename, '.gguf');
+
 export const listModels = async () => {
   const files = await globby('/root/.node-llama-cpp/models/*.gguf');
 
