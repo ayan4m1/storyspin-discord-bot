@@ -1,6 +1,7 @@
 import {
   ActionRowBuilder,
   ButtonBuilder,
+  ButtonStyle,
   ChatInputCommandInteraction,
   EmbedBuilder,
   GuildMember,
@@ -98,6 +99,7 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
               components: [
                 new ButtonBuilder()
                   .setLabel('Queue')
+                  .setStyle(ButtonStyle.Primary)
                   .setCustomId(`queue:${interaction.user.id}`)
               ]
             })
