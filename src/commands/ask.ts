@@ -24,7 +24,8 @@ export const data = new SlashCommandBuilder()
 
 export const handler = async (interaction: ChatInputCommandInteraction) => {
   try {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply();
+    await interaction.editReply('Processing your request...');
 
     const { options, user } = interaction;
     const member = interaction.member as GuildMember;

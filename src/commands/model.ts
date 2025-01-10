@@ -54,7 +54,10 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
     }
     case 'change':
       try {
-        await changeModel(options.getString('model', true));
+        const newModel = options.getString('model', true);
+
+        await interaction.editReply(`Loading ${newModel}`);
+        await changeModel(newModel);
         await interaction.editReply('New model loaded!');
       } catch (error) {
         log.error(error.message);
