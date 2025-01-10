@@ -73,6 +73,10 @@ const trimResponse = (response: LlamaResponseMeta): void => {
     );
   }
 
+  if (/\n+[0-9]$/.test(response.responseText)) {
+    response.responseText = response.responseText.replace(/\n+[0-9]$/, '');
+  }
+
   if (!response.responseText.endsWith('.')) {
     response.responseText += '.';
   }
