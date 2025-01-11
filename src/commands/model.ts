@@ -41,14 +41,14 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
       const models = await listModels();
 
       const modelList = models.map(({ name, size }) => ({
-        name: name === activeModel ? `**${name}**` : name,
+        name: name === activeModel ? `${name} :floppy_disk:` : name,
         value: filesize(size, { round: 0 })
       }));
 
       await interaction.editReply({
         embeds: [
           new EmbedBuilder({
-            description: `There are ${models.length} total models cached (active model is in bold).`,
+            description: `There are ${models.length} total models cached.`,
             fields: modelList
           })
         ]
