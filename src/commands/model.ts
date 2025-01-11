@@ -56,13 +56,13 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
       try {
         const newModel = options.getString('model', true);
 
-        await interaction.editReply(`Loading ${newModel}`);
+        await interaction.editReply(`:hourglass: Loading ${newModel}...`);
         await changeModel(newModel);
-        await interaction.editReply('New model loaded!');
+        await interaction.editReply(`:white_check_mark: ${newModel} loaded!`);
       } catch (error) {
         log.error(error.message);
         log.error(error.stack);
-        await interaction.editReply('Failed to load new model!');
+        await interaction.editReply(':x: Failed to load new model!');
       }
       break;
   }
