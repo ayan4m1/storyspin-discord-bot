@@ -5,6 +5,7 @@ import {
   ChatInputCommandInteraction,
   EmbedBuilder,
   GuildMember,
+  MessageFlags,
   SlashCommandBuilder,
   TextChannel,
   ThreadAutoArchiveDuration
@@ -67,7 +68,7 @@ export const data = new SlashCommandBuilder()
 
 export const handler = async (interaction: ChatInputCommandInteraction) => {
   try {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
     const { options, user } = interaction;
     const member = interaction.member as GuildMember;

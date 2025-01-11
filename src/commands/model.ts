@@ -2,6 +2,7 @@ import { filesize } from 'filesize';
 import {
   ChatInputCommandInteraction,
   EmbedBuilder,
+  MessageFlags,
   SlashCommandBuilder
 } from 'discord.js';
 
@@ -32,7 +33,7 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
   const { options } = interaction;
   const subcommand = options.getSubcommand(true);
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
   switch (subcommand) {
     case 'list': {
