@@ -26,6 +26,7 @@
     "discord-api-types": "^0.37.115",
     "discord.js": "^14.17.3",
     "dotenv": "^16.4.7",
+    "filesize": "^10.1.6",
     "globby": "^14.0.2",
     "node-llama-cpp": "^3.4.0",
     "redis": "^4.7.0",

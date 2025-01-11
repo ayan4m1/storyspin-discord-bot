@@ -33,6 +33,11 @@ type StoryResponse = {
   response: string;
 };
 
+type ModelInfo = {
+  name: string;
+  size: number;
+};
+
 const llama = await getLlama();
 let model = await llama.loadModel({
   modelPath: await resolveModelFile(config.modelFile)
@@ -84,15 +89,27 @@ const trimResponse = (response: LlamaResponseMeta): void => {
 
 export const getActiveModel = () => basename(model.filename, '.gguf');
 
-export const listModels = async () => {
-  const files = await globby('/root/.node-llama-cpp/models/*.gguf');
+export const listModels = async (): Promise<ModelInfo[]> => {
+  const files = await globby('/root/.node-llama-cpp/models/*.gguf', {
+    objectMode: true,
+    stats: true
+  });
 
-  return files.map((file) => basename(file, '.gguf'));
+  return files.map(({ path, stats }) => {
+    const file = basename(path, '.gguf');
+
+    return {
+      name: file,
+      size: stats.size
+    };
+  });
 };
 
 export const changeModel = async (modelName: string) => {
   model = await llama.loadModel({
-    modelPath: await resolveModelFile(modelName)
+    modelPath: await resolveModelFile(
+      modelName.endsWith('.gguf') ? modelName : `${modelName}.gguf`
+    )
   });
 };
 

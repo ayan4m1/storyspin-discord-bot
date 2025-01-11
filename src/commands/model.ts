@@ -1,3 +1,4 @@
+import { filesize } from 'filesize';
 import {
   ChatInputCommandInteraction,
   EmbedBuilder,
@@ -38,15 +39,16 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
       const activeModel = getActiveModel();
       const models = await listModels();
 
+      const modelList = models.map(({ name, size }) => ({
+        name: name === activeModel ? `**${name}**` : name,
+        value: filesize(size, { round: 0 })
+      }));
+
       await interaction.editReply({
         embeds: [
           new EmbedBuilder({
-            description: models
-              .map(
-                (model) =>
-                  ` * ${model === activeModel ? `**${model}**` : model}`
-              )
-              .join('\n')
+            description: `There are ${models.length} total models cached (active model is in bold).`,
+            fields: modelList
           })
         ]
       });
