@@ -42,7 +42,7 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
 
       const modelList = models.map(({ name, size }) => ({
         name: name === activeModel ? `${name} :floppy_disk:` : name,
-        value: filesize(size, { round: 0 })
+        value: `Size: ${filesize(size, { round: 0 })} VRAM: ${filesize(size * 1.2, { exponent: 3, round: 0 })}`
       }));
 
       await interaction.editReply({
