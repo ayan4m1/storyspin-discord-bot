@@ -1,6 +1,10 @@
 services:
   bot:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      #dockerfile: Dockerfile.cpu
+      #dockerfile: Dockerfile.vulkan
     volumes:
       - './models:/root/.node-llama-cpp/models:rw'
     env_file:
