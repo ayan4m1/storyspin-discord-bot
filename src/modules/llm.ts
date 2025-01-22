@@ -40,7 +40,8 @@ type ModelInfo = {
 
 const llama = await getLlama();
 let model = await llama.loadModel({
-  modelPath: await resolveModelFile(config.modelFile)
+  modelPath: await resolveModelFile(config.modelFile),
+  gpuLayers: config.gpuLayers
 });
 
 const promptOptions = {
@@ -109,7 +110,8 @@ export const changeModel = async (modelName: string) => {
   model = await llama.loadModel({
     modelPath: await resolveModelFile(
       modelName.endsWith('.gguf') ? modelName : `${modelName}.gguf`
-    )
+    ),
+    gpuLayers: config.gpuLayers
   });
 };
 

@@ -1,7 +1,21 @@
 import 'dotenv/config';
 
-export const llm = {
+type LlmConfig = {
+  modelFile: string;
+  gpuLayers: number | 'auto';
+  sampling: {
+    temperature: number;
+    topK: number;
+    topP: number;
+  };
+  tokenRepeatPenalty: number;
+};
+
+const gpuLayers = parseInt(process.env.SS_LLM_GPU_LAYERS, 10);
+
+export const llm: LlmConfig = {
   modelFile: process.env.SS_LLM_MODEL_FILE,
+  gpuLayers: isNaN(gpuLayers) ? 'auto' : gpuLayers,
   sampling: {
     temperature: parseFloat(process.env.SS_LLM_SAMPLING_TEMPERATURE || '0'),
     topK: parseFloat(process.env.SS_LLM_SAMPLING_TOP_K || '0'),
