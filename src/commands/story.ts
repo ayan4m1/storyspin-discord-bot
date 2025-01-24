@@ -1,7 +1,4 @@
 import {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
   ChatInputCommandInteraction,
   EmbedBuilder,
   GuildMember,
@@ -11,12 +8,12 @@ import {
   ThreadAutoArchiveDuration
 } from 'discord.js';
 
-import { getLogger } from '../modules/logging.js';
-import { getCurrentContributor, getStoryMapping } from '../modules/cache.js';
 import { queueTask } from '../modules/queue.js';
+import { getLogger } from '../modules/logging.js';
 import { beginStory, extendStory } from '../modules/llm.js';
 import { createSystemEmbed, createUserEmbed } from '../modules/discord.js';
-import { slugify } from '../utils/index.js';
+import { getCurrentContributor, getStoryMapping } from '../modules/cache.js';
+import { getStoryButtonRow, slugify } from '../utils/index.js';
 
 const log = getLogger('story');
 
@@ -95,16 +92,7 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
             createUserEmbed(member, user, prompt),
             createSystemEmbed(story.response)
           ],
-          components: [
-            new ActionRowBuilder<ButtonBuilder>({
-              components: [
-                new ButtonBuilder()
-                  .setLabel('Queue')
-                  .setStyle(ButtonStyle.Primary)
-                  .setCustomId(`queue:${interaction.user.id}`)
-              ]
-            })
-          ]
+          components: [getStoryButtonRow(thread.id, interaction.user.id)]
         });
         break;
       }
@@ -129,15 +117,7 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
             createUserEmbed(member, user, storyText),
             createSystemEmbed(result.response)
           ],
-          components: [
-            new ActionRowBuilder<ButtonBuilder>({
-              components: [
-                new ButtonBuilder()
-                  .setLabel('Queue')
-                  .setCustomId(`queue:${interaction.user.id}`)
-              ]
-            })
-          ]
+          components: [getStoryButtonRow(thread.id, interaction.user.id)]
         });
         break;
       }

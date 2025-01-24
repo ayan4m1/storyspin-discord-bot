@@ -6,8 +6,8 @@ import {
   SlashCommandBuilder
 } from 'discord.js';
 
-import { changeModel, getActiveModel, listModels } from '../modules/llm.js';
 import { getLogger } from '../modules/logging.js';
+import { changeModel, getActiveModel, listModels } from '../modules/llm.js';
 
 const log = getLogger('model');
 

@@ -9,6 +9,7 @@ import { queueTask } from '../modules/queue.js';
 import { getLogger } from '../modules/logging.js';
 import { createUserEmbed } from '../modules/discord.js';
 import { updateMessageMapping } from '../modules/cache.js';
+import { getAnswerButtonRow } from '../utils/index.js';
 
 const log = getLogger('ask');
 
@@ -24,19 +25,22 @@ export const data = new SlashCommandBuilder()
 
 export const handler = async (interaction: ChatInputCommandInteraction) => {
   try {
-    await interaction.deferReply();
-    await interaction.editReply('Processing your request...');
-
     const { options, user } = interaction;
     const member = interaction.member as GuildMember;
     const prompt = options.getString('prompt', true);
+
+    await interaction.deferReply();
+    await interaction.editReply('Generating a response...');
+
     const result = await queueTask(askQuestion(prompt));
 
     await interaction.deleteReply();
+
     const message = await interaction.channel.send({
       embeds: [
         createUserEmbed(member, user, `**${prompt}**\n${result.response}`)
-      ]
+      ],
+      components: [getAnswerButtonRow(result.id)]
     });
 
     await updateMessageMapping(message.id, result.id);
