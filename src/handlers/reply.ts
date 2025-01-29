@@ -10,17 +10,13 @@ const log = getLogger('reply');
 
 export const eventHandlers = {
   [Events.MessageCreate]: async (message: Message) => {
-    if (message.type !== MessageType.Reply) {
+    if (message.type !== MessageType.Reply || !message.channel.isTextBased()) {
       return;
     }
 
     const messageMap = await getMessageMapping();
 
     if (!messageMap[message.reference?.messageId]) {
-      return;
-    }
-
-    if (!message.channel.isTextBased()) {
       return;
     }
 
