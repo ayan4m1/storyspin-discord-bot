@@ -13,6 +13,7 @@ export const queueMap = new Map<string, string[]>();
 const userColorMap = new Map<string, number>();
 const storyMappingKey = 'storyMapping';
 const messageMappingKey = 'messageMapping';
+const allenKey = 'allenChatHistory';
 const client = createClient({
   url: 'redis://cache'
 });
@@ -161,3 +162,23 @@ export const updateChatContext = async (
   id: string,
   history: ChatHistoryItem[]
 ): Promise<string> => await client.set(id, JSON.stringify(history));
+
+export const getAllenChatContext = async (): Promise<ChatHistoryItem[]> => {
+  const exists = await client.exists(allenKey);
+
+  if (!exists) {
+    return [];
+  }
+
+  const value = await client.get(allenKey);
+
+  return JSON.parse(value) as unknown as ChatHistoryItem[];
+};
+
+export const updateAllenChatContext = async (
+  history: ChatHistoryItem[]
+): Promise<string> =>
+  client.set(
+    allenKey,
+    JSON.stringify(history.slice(-Math.min(history.length, 10)))
+  );

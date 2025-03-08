@@ -9,7 +9,13 @@ import {
 } from 'node-llama-cpp';
 
 import { llm as config } from './config.js';
-import { findStoryByName, getChatContext, updateChatContext } from './cache.js';
+import {
+  findStoryByName,
+  getAllenChatContext,
+  getChatContext,
+  updateAllenChatContext,
+  updateChatContext
+} from './cache.js';
 
 type LlamaResponseMeta = {
   responseText: string;
@@ -222,6 +228,36 @@ export const extendStory = async (
   return {
     id,
     input,
+    response: response.responseText
+  };
+};
+
+export const answerAllen = async (input: string): Promise<QuestionResponse> => {
+  const id = v4();
+  const chatHistory = await getAllenChatContext();
+
+  if (!chatHistory.length) {
+    chatHistory.push({
+      type: 'system',
+      text: 'Your role is to point out any grammatical or logical mistakes made by the author in the most condescending and rude way possible. Do not resort to name-calling, but applicable insults are appropriate responses. If the author has not made any mistakes, then praise them in a condescending way.'
+    });
+  }
+
+  const chatSession = await createChatSession(chatHistory);
+  const response = await chatSession.promptWithMeta(input, {
+    ...promptOptions,
+    maxTokens: 128
+  });
+
+  trimResponse(response);
+
+  await updateAllenChatContext(chatSession.getChatHistory());
+
+  chatSession.context.dispose();
+  chatSession.dispose();
+
+  return {
+    id,
     response: response.responseText
   };
 };
