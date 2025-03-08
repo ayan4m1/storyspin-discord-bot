@@ -52,7 +52,6 @@ let model = await llama.loadModel({
 
 const promptOptions = {
   temperature: config.sampling.temperature,
-  seed: Math.random() * Number.MAX_SAFE_INTEGER,
   topK: config.sampling.topK,
   topP: config.sampling.topP,
   repeatPenalty: {
@@ -75,6 +74,16 @@ const createChatSession = async (chatHistory?: ChatHistoryItem[]) => {
 };
 
 const trimResponse = (response: LlamaResponseMeta): void => {
+  if (
+    /\[INST\]/.test(response.responseText) &&
+    /\[\/INST\]/.test(response.responseText)
+  ) {
+    response.responseText = response.responseText.slice(
+      response.responseText.indexOf('[INST]') + 6,
+      response.responseText.indexOf('[/INST]')
+    );
+  }
+
   if (
     response.stopReason === 'maxTokens' &&
     response.responseText.includes('.')
@@ -135,6 +144,7 @@ export const askQuestion = async (
   ]);
   const response = await chatSession.promptWithMeta(question, {
     ...promptOptions,
+    seed: Math.random() * Number.MAX_SAFE_INTEGER,
     maxTokens: tokens
   });
 
@@ -161,6 +171,7 @@ export const beginStory = async (
     `Please act as a storyteller. Provide a beginning for the following story: ${input}`,
     {
       ...promptOptions,
+      seed: Math.random() * Number.MAX_SAFE_INTEGER,
       maxTokens: tokens
     }
   );
@@ -188,6 +199,7 @@ export const extendAnswer = async (
   const chatSession = await createChatSession(chatHistory);
   const response = await chatSession.promptWithMeta(input, {
     ...promptOptions,
+    seed: Math.random() * Number.MAX_SAFE_INTEGER,
     maxTokens: tokens
   });
 
@@ -215,6 +227,7 @@ export const extendStory = async (
   const chatSession = await createChatSession(chatHistory);
   const response = await chatSession.promptWithMeta(input, {
     ...promptOptions,
+    seed: Math.random() * Number.MAX_SAFE_INTEGER,
     maxTokens: tokens
   });
 
@@ -235,17 +248,10 @@ export const extendStory = async (
 export const answerAllen = async (input: string): Promise<QuestionResponse> => {
   const id = v4();
   const chatHistory = await getAllenChatContext();
-
-  if (!chatHistory.length) {
-    chatHistory.push({
-      type: 'system',
-      text: 'Your role is to point out any grammatical or logical mistakes made by the author in the most condescending and rude way possible. Do not resort to name-calling, but applicable insults are appropriate responses. If the author has not made any mistakes, then praise them in a condescending way.'
-    });
-  }
-
   const chatSession = await createChatSession(chatHistory);
   const response = await chatSession.promptWithMeta(input, {
     ...promptOptions,
+    seed: Math.random() * Number.MAX_SAFE_INTEGER,
     maxTokens: 128
   });
 

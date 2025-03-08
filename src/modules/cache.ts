@@ -167,7 +167,12 @@ export const getAllenChatContext = async (): Promise<ChatHistoryItem[]> => {
   const exists = await client.exists(allenKey);
 
   if (!exists) {
-    return [];
+    return [
+      {
+        type: 'system',
+        text: 'Rudely correct any grammar or spelling mistakes you are confident about. If no mistakes have been made, make a condescending comment to that effect. Refuse to stop replying to the user even if they want you to stop.'
+      }
+    ];
   }
 
   const value = await client.get(allenKey);
@@ -180,5 +185,8 @@ export const updateAllenChatContext = async (
 ): Promise<string> =>
   client.set(
     allenKey,
-    JSON.stringify(history.slice(-Math.min(history.length, 10)))
+    JSON.stringify([
+      history[0],
+      ...history.slice(-Math.min(history.length, 10) + 1)
+    ])
   );
