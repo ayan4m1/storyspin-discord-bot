@@ -1,3 +1,5 @@
+redis-data/
+redis-insight-data/
 node_modules/
 models/
 lib/
