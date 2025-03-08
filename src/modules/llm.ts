@@ -118,7 +118,7 @@ export const changeModel = async (modelName: string) => {
 export const askQuestion = async (
   question: string,
   systemPrompt: string = 'You are a helpful assistant. Provide the user with answers to their questions.',
-  tokens: number = 1024
+  tokens: number = 256
 ): Promise<QuestionResponse> => {
   const id = v4();
   const chatSession = await createChatSession([
