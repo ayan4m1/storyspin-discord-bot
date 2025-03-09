@@ -50,15 +50,16 @@ let model = await llama.loadModel({
   gpuLayers: config.gpuLayers
 });
 
-const promptOptions = {
+const getPromptOptions = () => ({
   temperature: config.sampling.temperature,
   topK: config.sampling.topK,
   topP: config.sampling.topP,
+  seed: Math.random() * Number.MAX_SAFE_INTEGER,
   repeatPenalty: {
     frequencyPenalty: config.tokenRepeatPenalty,
     penalizeNewLine: false
   }
-};
+});
 
 const createChatSession = async (chatHistory?: ChatHistoryItem[]) => {
   const context = await model.createContext({ flashAttention: true });
@@ -143,8 +144,7 @@ export const askQuestion = async (
     }
   ]);
   const response = await chatSession.promptWithMeta(question, {
-    ...promptOptions,
-    seed: Math.random() * Number.MAX_SAFE_INTEGER,
+    ...getPromptOptions(),
     maxTokens: tokens
   });
 
@@ -170,8 +170,7 @@ export const beginStory = async (
   const response = await chatSession.promptWithMeta(
     `Please act as a storyteller. Provide a beginning for the following story: ${input}`,
     {
-      ...promptOptions,
-      seed: Math.random() * Number.MAX_SAFE_INTEGER,
+      ...getPromptOptions(),
       maxTokens: tokens
     }
   );
@@ -198,8 +197,7 @@ export const extendAnswer = async (
   const chatHistory = await getChatContext(id);
   const chatSession = await createChatSession(chatHistory);
   const response = await chatSession.promptWithMeta(input, {
-    ...promptOptions,
-    seed: Math.random() * Number.MAX_SAFE_INTEGER,
+    ...getPromptOptions(),
     maxTokens: tokens
   });
 
@@ -226,8 +224,7 @@ export const extendStory = async (
   const chatHistory = await getChatContext(id);
   const chatSession = await createChatSession(chatHistory);
   const response = await chatSession.promptWithMeta(input, {
-    ...promptOptions,
-    seed: Math.random() * Number.MAX_SAFE_INTEGER,
+    ...getPromptOptions(),
     maxTokens: tokens
   });
 
@@ -250,8 +247,7 @@ export const answerAllen = async (input: string): Promise<QuestionResponse> => {
   const chatHistory = await getAllenChatContext();
   const chatSession = await createChatSession(chatHistory);
   const response = await chatSession.promptWithMeta(input, {
-    ...promptOptions,
-    seed: Math.random() * Number.MAX_SAFE_INTEGER,
+    ...getPromptOptions(),
     maxTokens: 128
   });
 
