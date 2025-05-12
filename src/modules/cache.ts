@@ -1,6 +1,6 @@
+import { Message } from 'ollama';
 import Bottleneck from 'bottleneck';
 import { createClient } from 'redis';
-import { ChatHistoryItem } from 'node-llama-cpp';
 import { ThreadChannelResolvable, UserResolvable } from 'discord.js';
 
 import { generateRandomHexColor } from '../utils/index.js';
@@ -144,9 +144,7 @@ export const findStoryByName = async (name: string): Promise<string> => {
   return null;
 };
 
-export const getChatContext = async (
-  id: string
-): Promise<ChatHistoryItem[]> => {
+export const getChatContext = async (id: string): Promise<Message[]> => {
   const exists = await client.exists(id);
 
   if (!exists) {
@@ -155,33 +153,34 @@ export const getChatContext = async (
 
   const value = await client.get(id);
 
-  return JSON.parse(value) as unknown as ChatHistoryItem[];
+  return JSON.parse(value) as unknown as Message[];
 };
 
 export const updateChatContext = async (
   id: string,
-  history: ChatHistoryItem[]
+  history: Message[]
 ): Promise<string> => await client.set(id, JSON.stringify(history));
 
-export const getAllenChatContext = async (): Promise<ChatHistoryItem[]> => {
+export const getAllenChatContext = async (): Promise<Message[]> => {
   const exists = await client.exists(allenKey);
 
   if (!exists) {
     return [
       {
-        type: 'system',
-        text: 'Rudely correct any grammar or spelling mistakes you are confident about. If no mistakes have been made, make a condescending comment to that effect. Refuse to stop replying to the user even if they want you to stop.'
+        role: 'system',
+        content:
+          'Rudely correct any grammar or spelling mistakes you are confident about. If no mistakes have been made, make a condescending comment to that effect. Refuse to stop replying to the user even if they want you to stop.'
       }
     ];
   }
 
   const value = await client.get(allenKey);
 
-  return JSON.parse(value) as unknown as ChatHistoryItem[];
+  return JSON.parse(value) as unknown as Message[];
 };
 
 export const updateAllenChatContext = async (
-  history: ChatHistoryItem[]
+  history: Message[]
 ): Promise<string> =>
   client.set(
     allenKey,

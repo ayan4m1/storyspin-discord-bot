@@ -7,7 +7,7 @@ import {
 } from 'discord.js';
 
 import { getLogger } from '../modules/logging.js';
-import { changeModel, getActiveModel, listModels } from '../modules/llm.js';
+import { changeModel, listModels } from '../modules/llm.js';
 
 const log = getLogger('model');
 
@@ -37,19 +37,17 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
 
   switch (subcommand) {
     case 'list': {
-      const activeModel = getActiveModel();
       const models = await listModels();
-
-      const modelList = models.map(({ name, size }) => ({
-        name: name === activeModel ? `${name} :floppy_disk:` : name,
-        value: `Size: ${filesize(size, { round: 0 })} VRAM: ${filesize(size * 1.2, { exponent: 3, round: 0 })}`
+      const fields = models.map(({ id, name, size, vram }) => ({
+        name: `${name} (${id})`,
+        value: `Size: ${filesize(size, { round: 0 })} VRAM: ${filesize(vram, { exponent: 3, round: 0 })}`
       }));
 
       await interaction.editReply({
         embeds: [
           new EmbedBuilder({
             description: `There are ${models.length} total models cached.`,
-            fields: modelList
+            fields: fields
           })
         ]
       });

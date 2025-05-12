@@ -17,38 +17,37 @@
   "types": "lib/index.d.ts",
   "scripts": {
     "start": "node lib/index.js",
-    "lint": "eslint src/**/*.js",
+    "lint": "eslint src/**/*.ts",
     "build": "rollup -c --configPlugin typescript"
   },
   "dependencies": {
     "@ayan4m1/rollup-plugin-multi-input": "^2.1.2",
     "bottleneck": "^2.19.5",
-    "discord-api-types": "^0.37.120",
-    "discord.js": "^14.18.0",
+    "discord-api-types": "^0.38.5",
+    "discord.js": "^14.19.3",
     "dotenv": "^16.5.0",
     "filesize": "^10.1.6",
-    "globby": "^14.1.0",
-    "node-llama-cpp": "^3.7.0",
-    "redis": "^4.7.0",
+    "ollama": "^0.5.15",
+    "redis": "4.7.1",
     "url-slug": "^4.0.1",
     "uuid": "^11.1.0",
     "winston": "^3.17.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.25.1",
+    "@eslint/js": "^9.26.0",
     "@rollup/plugin-typescript": "^12.1.2",
-    "eslint": "^9.25.1",
-    "eslint-config-prettier": "^10.1.2",
+    "eslint": "^9.26.0",
+    "eslint-config-prettier": "^10.1.5",
     "eslint-import-resolver-typescript": "^4.3.4",
-    "eslint-plugin-import-x": "^4.10.6",
-    "eslint-plugin-prettier": "^5.2.6",
-    "globals": "^16.0.0",
+    "eslint-plugin-import-x": "^4.11.1",
+    "eslint-plugin-prettier": "^5.4.0",
+    "globals": "^16.1.0",
     "husky": "^9.1.7",
-    "lint-staged": "^15.5.1",
+    "lint-staged": "^16.0.0",
     "prettier": "^3.5.3",
-    "rollup": "^4.40.0",
+    "rollup": "^4.40.2",
     "rollup-plugin-auto-external": "^2.0.0",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.31.0"
+    "typescript-eslint": "^8.32.1"
   }
 }

@@ -1,12 +1,5 @@
 import { v4 } from 'uuid';
-import { basename } from 'path';
-import { globby } from 'globby';
-import {
-  ChatHistoryItem,
-  getLlama,
-  LlamaChatSession,
-  resolveModelFile
-} from 'node-llama-cpp';
+import ollama, { ChatResponse, Options } from 'ollama';
 
 import { llm as config } from './config.js';
 import {
@@ -16,17 +9,6 @@ import {
   updateAllenChatContext,
   updateChatContext
 } from './cache.js';
-
-type LlamaResponseMeta = {
-  responseText: string;
-  stopReason:
-    | 'abort'
-    | 'maxTokens'
-    | 'eogToken'
-    | 'stopGenerationTrigger'
-    | 'functionCalls'
-    | 'customStopTrigger';
-};
 
 type QuestionResponse = {
   id: string;
@@ -40,226 +22,211 @@ type StoryResponse = {
 };
 
 type ModelInfo = {
+  id: string;
   name: string;
   size: number;
+  vram: number;
 };
 
-const llama = await getLlama();
-let model = await llama.loadModel({
-  modelPath: await resolveModelFile(config.modelFile),
-  gpuLayers: config.gpuLayers
-});
+let modelId = config.modelId;
 
-const getPromptOptions = () => ({
+const getPromptOptions = (): Partial<Options> => ({
   temperature: config.sampling.temperature,
-  topK: config.sampling.topK,
-  topP: config.sampling.topP,
+  top_k: config.sampling.topK,
+  top_p: config.sampling.topP,
   seed: Math.random() * Number.MAX_SAFE_INTEGER,
-  repeatPenalty: {
-    frequencyPenalty: config.tokenRepeatPenalty,
-    penalizeNewLine: false
-  }
+  repeat_penalty: config.tokenRepeatPenalty,
+  penalize_newline: false
 });
 
-const createChatSession = async (chatHistory?: ChatHistoryItem[]) => {
-  const context = await model.createContext({ flashAttention: true });
-  const session = new LlamaChatSession({
-    contextSequence: context.getSequence()
-  });
-
-  if (chatHistory) {
-    session.setChatHistory(chatHistory);
-  }
-
-  return session;
-};
-
-const trimResponse = (response: LlamaResponseMeta): void => {
-  if (
-    /\[INST\]/.test(response.responseText) &&
-    /\[\/INST\]/.test(response.responseText)
-  ) {
-    response.responseText = response.responseText.slice(
-      response.responseText.indexOf('[INST]') + 6,
-      response.responseText.indexOf('[/INST]')
+const trimResponse = ({
+  done_reason,
+  message: { content }
+}: ChatResponse): void => {
+  if (/\[INST\]/.test(content) && /\[\/INST\]/.test(content)) {
+    content = content.slice(
+      content.indexOf('[INST]') + 6,
+      content.indexOf('[/INST]')
     );
   }
 
-  if (
-    response.stopReason === 'maxTokens' &&
-    response.responseText.includes('.')
-  ) {
-    response.responseText = response.responseText.substring(
-      0,
-      response.responseText.lastIndexOf('.')
-    );
+  if (done_reason === 'maxTokens' && content.includes('.')) {
+    content = content.substring(0, content.lastIndexOf('.'));
   }
 
-  if (/\n+[0-9]$/.test(response.responseText)) {
-    response.responseText = response.responseText.replace(/\n+[0-9]$/, '');
+  if (/\n+[0-9]$/.test(content)) {
+    content = content.replace(/\n+[0-9]$/, '');
   }
 
-  if (!response.responseText.endsWith('.')) {
-    response.responseText += '.';
+  if (!content.endsWith('.')) {
+    content += '.';
   }
 };
-
-export const getActiveModel = () => basename(model.filename, '.gguf');
 
 export const listModels = async (): Promise<ModelInfo[]> => {
-  const files = await globby('/root/.node-llama-cpp/models/*.gguf', {
-    objectMode: true,
-    stats: true
-  });
+  const { models } = await ollama.list();
 
-  return files.map(({ path, stats }) => {
-    const file = basename(path, '.gguf');
-
-    return {
-      name: file,
-      size: stats.size
-    };
-  });
+  return models.map(({ model, name, size, size_vram }) => ({
+    id: model,
+    name,
+    size,
+    vram: size_vram
+  }));
 };
 
-export const changeModel = async (modelName: string) => {
-  model = await llama.loadModel({
-    modelPath: await resolveModelFile(
-      modelName.endsWith('.gguf') ? modelName : `${modelName}.gguf`
-    ),
-    gpuLayers: config.gpuLayers
+export const changeModel = async (newModelId: string) => {
+  modelId = newModelId;
+
+  const stream = await ollama.pull({
+    model: modelId,
+    stream: true
   });
+
+  for await (const part of stream) {
+    console.log(part.status);
+  }
 };
 
 export const askQuestion = async (
   question: string,
-  systemPrompt: string = 'You are a helpful assistant. Provide the user with answers to their questions.',
-  tokens: number = 256
+  systemPrompt: string = 'You are a helpful assistant. Provide the user with answers to their questions.'
 ): Promise<QuestionResponse> => {
   const id = v4();
-  const chatSession = await createChatSession([
+  const chatHistory = [
     {
-      type: 'system',
-      text: systemPrompt
+      role: 'system',
+      content: systemPrompt
+    },
+    {
+      role: 'user',
+      content: question
     }
-  ]);
-  const response = await chatSession.promptWithMeta(question, {
-    ...getPromptOptions(),
-    maxTokens: tokens
+  ];
+  const response = await ollama.chat({
+    model: modelId,
+    options: getPromptOptions(),
+    messages: chatHistory
   });
 
   trimResponse(response);
 
-  await updateChatContext(id, chatSession.getChatHistory());
+  chatHistory.push(response.message);
 
-  chatSession.context.dispose();
-  chatSession.dispose();
+  await updateChatContext(id, chatHistory);
 
   return {
     id,
-    response: response.responseText
+    response: response.message.content
   };
 };
 
-export const beginStory = async (
-  input: string,
-  tokens: number = 256
-): Promise<StoryResponse> => {
+export const beginStory = async (input: string): Promise<StoryResponse> => {
   const id = v4();
-  const chatSession = await createChatSession([]);
-  const response = await chatSession.promptWithMeta(
-    `Please act as a storyteller. Provide a beginning for the following story: ${input}`,
+  const chatHistory = [
     {
-      ...getPromptOptions(),
-      maxTokens: tokens
+      role: 'user',
+      content: `Please act as a storyteller. Provide a beginning for the following story: ${input}`
     }
-  );
+  ];
+  const response = await ollama.chat({
+    model: modelId,
+    options: getPromptOptions(),
+    messages: chatHistory
+  });
 
   trimResponse(response);
 
-  await updateChatContext(id, chatSession.getChatHistory());
+  chatHistory.push(response.message);
 
-  chatSession.context.dispose();
-  chatSession.dispose();
+  await updateChatContext(id, chatHistory);
 
   return {
     id,
     input,
-    response: response.responseText
+    response: response.message.content
   };
 };
 
 export const extendAnswer = async (
   id: string,
-  input: string,
-  tokens: number = 128
+  input: string
 ): Promise<StoryResponse> => {
   const chatHistory = await getChatContext(id);
-  const chatSession = await createChatSession(chatHistory);
-  const response = await chatSession.promptWithMeta(input, {
-    ...getPromptOptions(),
-    maxTokens: tokens
+
+  chatHistory.push({
+    role: 'user',
+    content: input
+  });
+
+  const response = await ollama.chat({
+    model: modelId,
+    options: getPromptOptions(),
+    messages: chatHistory
   });
 
   trimResponse(response);
 
-  await updateChatContext(id, chatSession.getChatHistory());
-
-  chatSession.context.dispose();
-  chatSession.dispose();
+  await updateChatContext(id, chatHistory);
 
   return {
     id,
     input,
-    response: response.responseText
+    response: response.message.content
   };
 };
 
 export const extendStory = async (
   storyName: string,
-  input: string,
-  tokens: number = 128
+  input: string
 ): Promise<StoryResponse> => {
   const id = await findStoryByName(storyName);
   const chatHistory = await getChatContext(id);
-  const chatSession = await createChatSession(chatHistory);
-  const response = await chatSession.promptWithMeta(input, {
-    ...getPromptOptions(),
-    maxTokens: tokens
+
+  chatHistory.push({
+    role: 'user',
+    content: input
+  });
+
+  const response = await ollama.chat({
+    model: modelId,
+    options: getPromptOptions(),
+    messages: chatHistory
   });
 
   trimResponse(response);
 
-  await updateChatContext(id, chatSession.getChatHistory());
+  chatHistory.push(response.message);
 
-  chatSession.context.dispose();
-  chatSession.dispose();
+  await updateChatContext(id, chatHistory);
 
   return {
     id,
     input,
-    response: response.responseText
+    response: response.message.content
   };
 };
 
 export const answerAllen = async (input: string): Promise<QuestionResponse> => {
   const id = v4();
   const chatHistory = await getAllenChatContext();
-  const chatSession = await createChatSession(chatHistory);
-  const response = await chatSession.promptWithMeta(input, {
-    ...getPromptOptions(),
-    maxTokens: 128
+
+  chatHistory.push({
+    role: 'user',
+    content: input
+  });
+
+  const response = await ollama.chat({
+    model: modelId,
+    options: getPromptOptions(),
+    messages: chatHistory
   });
 
   trimResponse(response);
 
-  await updateAllenChatContext(chatSession.getChatHistory());
-
-  chatSession.context.dispose();
-  chatSession.dispose();
+  await updateAllenChatContext(chatHistory);
 
   return {
     id,
-    response: response.responseText
+    response: response.message.content
   };
 };

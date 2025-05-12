@@ -1,7 +1,8 @@
 import 'dotenv/config';
 
 type LlmConfig = {
-  modelFile: string;
+  modelId: string;
+  ollamaUrl: string;
   gpuLayers: number | 'auto';
   sampling: {
     temperature: number;
@@ -14,7 +15,8 @@ type LlmConfig = {
 const gpuLayers = parseInt(process.env.SS_LLM_GPU_LAYERS, 10);
 
 export const llm: LlmConfig = {
-  modelFile: process.env.SS_LLM_MODEL_FILE,
+  modelId: process.env.SS_LLM_MODEL_ID,
+  ollamaUrl: process.env.SS_LLM_OLLAMA_URL,
   gpuLayers: isNaN(gpuLayers) ? 'auto' : gpuLayers,
   sampling: {
     temperature: parseFloat(process.env.SS_LLM_SAMPLING_TEMPERATURE || '0'),
