@@ -1,23 +1,12 @@
 services:
   bot:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      #dockerfile: Dockerfile.cpu
-      #dockerfile: Dockerfile.vulkan
+    build: .
     volumes:
       - './models:/root/.node-llama-cpp/models:rw'
     env_file:
       - .env
     depends_on:
       - cache
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
   cache:
     image: redis:latest
     command: redis-server --save 60 1 --loglevel warning
